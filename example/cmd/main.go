@@ -85,7 +85,7 @@ func main() {
 		}
 	}()
 
-	time.Sleep(11*time.Second)
+	time.Sleep(11 * time.Second)
 }
 
 func genConfigJSON() []byte {
