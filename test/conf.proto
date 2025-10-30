@@ -1,7 +1,7 @@
 syntax = "proto3";
 package leo.config.test;
 
-option go_package = "github.com/go-leo/config/test;test";
+option go_package = "github.com/go-leo/gonfig/test;test";
 
 message Config {
   string field1 = 1;

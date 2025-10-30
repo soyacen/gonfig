@@ -2,7 +2,7 @@ package toml
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/go-leo/config/format"
+	"github.com/go-leo/gonfig/format"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

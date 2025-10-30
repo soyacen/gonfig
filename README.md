@@ -22,7 +22,7 @@ Leo当前支持了四种常用的配置格式:
 ```proto
 syntax = "proto3";
 package leo.config.example;
-option go_package = "github.com/go-leo/config/example/configs;configs";
+option go_package = "github.com/go-leo/gonfig/example/configs;configs";
 
 import "leo/config/annotations.proto";
 
@@ -66,8 +66,8 @@ package configs
 
 import (
 	context "context"
-	config "github.com/go-leo/config"
-	resource "github.com/go-leo/config/resource"
+	config "github.com/go-leo/gonfig"
+	resource "github.com/go-leo/gonfig/resource"
 	proto "google.golang.org/protobuf/proto"
 	sync "sync"
 )
@@ -139,9 +139,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-leo/config/example/configs"
-	"github.com/go-leo/config/resource/env"
-	"github.com/go-leo/config/resource/file"
+	"github.com/go-leo/gonfig/example/configs"
+	"github.com/go-leo/gonfig/resource/env"
+	"github.com/go-leo/gonfig/resource/file"
 )
 
 func main() {

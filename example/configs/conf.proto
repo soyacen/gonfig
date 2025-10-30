@@ -1,6 +1,6 @@
 syntax = "proto3";
 package leo.config.example;
-option go_package = "github.com/go-leo/config/example/configs;configs";
+option go_package = "github.com/go-leo/gonfig/example/configs;configs";
 
 import "leo/config/annotations.proto";
 

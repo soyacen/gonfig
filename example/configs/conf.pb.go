@@ -7,7 +7,7 @@
 package configs
 
 import (
-	_ "github.com/go-leo/config/proto/leo/config"
+	_ "github.com/go-leo/gonfig/proto/leo/config"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

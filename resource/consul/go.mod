@@ -1,9 +1,9 @@
-module github.com/go-leo/config/resource/consul
+module github.com/go-leo/gonfig/resource/consul
 
 go 1.20
 
 require (
-	github.com/go-leo/config v0.0.0-20250718035014-eb125fe8b6df
+	github.com/go-leo/gonfig v0.0.0-20250718035014-eb125fe8b6df
 	github.com/hashicorp/consul/api v1.29.6
 	github.com/hashicorp/go-hclog v1.6.3
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e

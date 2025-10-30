@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-leo/config/resource"
+	"github.com/go-leo/gonfig/resource"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 )

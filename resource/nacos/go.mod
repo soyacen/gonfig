@@ -1,9 +1,9 @@
-module github.com/go-leo/config/resource/nacos
+module github.com/go-leo/gonfig/resource/nacos
 
 go 1.20
 
 require (
-	github.com/go-leo/config v0.0.0-20250718035014-eb125fe8b6df
+	github.com/go-leo/gonfig v0.0.0-20250718035014-eb125fe8b6df
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.9
 	golang.org/x/crypto v0.33.0
 	golang.org/x/net v0.35.0
@@ -63,4 +63,4 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
 
-// replace github.com/go-leo/config v0.0.0 => ../../
+// replace github.com/go-leo/gonfig v0.0.0 => ../../

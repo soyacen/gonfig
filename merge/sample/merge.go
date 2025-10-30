@@ -1,7 +1,7 @@
 package sample
 
 import (
-	"github.com/go-leo/config/merge"
+	"github.com/go-leo/gonfig/merge"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

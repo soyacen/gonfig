@@ -3,8 +3,8 @@ package config
 import (
 	"context"
 
-	"github.com/go-leo/config/merge"
-	"github.com/go-leo/config/resource"
+	"github.com/go-leo/gonfig/merge"
+	"github.com/go-leo/gonfig/resource"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"

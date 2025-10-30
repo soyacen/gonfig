@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/go-leo/config/test"
+	"github.com/go-leo/gonfig/test"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

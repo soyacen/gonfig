@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/go-leo/config/proto/leo/config"
+	"github.com/go-leo/gonfig/proto/leo/config"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
@@ -177,12 +177,12 @@ var (
 )
 
 var (
-	configxPackage = protogen.GoImportPath("github.com/go-leo/config")
+	configxPackage = protogen.GoImportPath("github.com/go-leo/gonfig")
 	Load           = configxPackage.Ident("Load")
 	Watch          = configxPackage.Ident("Watch")
 )
 
 var (
-	resourcePackage = protogen.GoImportPath("github.com/go-leo/config/resource")
+	resourcePackage = protogen.GoImportPath("github.com/go-leo/gonfig/resource")
 	Resource        = resourcePackage.Ident("Resource")
 )
