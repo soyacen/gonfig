@@ -1,15 +1,15 @@
 module github.com/go-leo/gonfig/resource/nacos
 
-go 1.20
+go 1.23.0
 
 require (
-	github.com/go-leo/gonfig v0.0.0-20250718035014-eb125fe8b6df
-	github.com/nacos-group/nacos-sdk-go/v2 v2.2.9
-	golang.org/x/crypto v0.33.0
-	golang.org/x/net v0.35.0
-	golang.org/x/sync v0.11.0
-	golang.org/x/sys v0.30.0
-	google.golang.org/protobuf v1.34.2
+	github.com/go-leo/gonfig v0.0.0-00010101000000-000000000000
+	github.com/nacos-group/nacos-sdk-go/v2 v2.3.5
+	golang.org/x/crypto v0.41.0
+	golang.org/x/net v0.43.0
+	golang.org/x/sync v0.16.0
+	golang.org/x/sys v0.35.0
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -55,12 +55,12 @@ require (
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240812133136-8ffd90a71988 // indirect
-	google.golang.org/grpc v1.64.1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
+	google.golang.org/grpc v1.67.3 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
 
-// replace github.com/go-leo/gonfig v0.0.0 => ../../
+replace github.com/go-leo/gonfig => ../../

@@ -99,6 +99,7 @@ key:
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, _ = resource.Load(ctx)
 
 	c := make(chan *structpb.Struct)
 	notifyFunc := func(newValue *structpb.Struct) {

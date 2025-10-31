@@ -166,20 +166,27 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 	}()
 
 	// Create stop function with sync.Once to ensure it's only called once
+	stopC := make(chan struct{})
 	var onceStop sync.Once
 	stop := func(ctx context.Context) error {
-		onceStop.Do(func() {
-			plan.Stop()
-		})
+		onceStop.Do(func() { close(stopC) })
 		return nil
 	}
 
 	// Start a goroutine to handle context cancellation
 	go func() {
-		select {
-		case <-ctx.Done():
-			stop(context.Background())
-			errFunc(ctx.Err())
+		// Ensure plan is stop when goroutine exits
+		defer plan.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				// Context cancelled, exit goroutine
+				errFunc(ctx.Err())
+				return
+			case <-stopC:
+				// Stop signal received, exit goroutine
+				return
+			}
 		}
 	}()
 

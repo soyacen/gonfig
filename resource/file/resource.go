@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 
 	"github.com/fsnotify/fsnotify"
@@ -100,10 +101,11 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 		return nil, err
 	}
 
-	// Create stop channel and stop function
+	// Create stop function with sync.Once to ensure it's only called once
 	stopC := make(chan struct{})
+	var onceStop sync.Once
 	stop := func(ctx context.Context) error {
-		close(stopC)
+		onceStop.Do(func() { close(stopC) })
 		return nil
 	}
 
@@ -121,6 +123,7 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 			select {
 			case <-ctx.Done():
 				// Context cancelled, exit goroutine
+				errFunc(ctx.Err())
 				return
 
 			case <-stopC:

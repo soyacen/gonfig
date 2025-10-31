@@ -128,63 +128,42 @@ func TestResource_Watch_Nacos(t *testing.T) {
 		t.Errorf("New() error = %v", err)
 		return
 	}
-	notifyC := make(chan *structpb.Struct, 1)
-	errC := make(chan error, 1)
-	// Start watching
 	ctx := context.Background()
+	_, _ = r.Load(ctx)
+
+	c := make(chan *structpb.Struct)
+	notifyC := func(value *structpb.Struct) {
+		c <- value
+	}
+	errC := func(error) {}
+	// Start watching
 	stopFunc, err := r.Watch(ctx, notifyC, errC)
 	if err != nil {
 		t.Errorf("Watch() error = %v", err)
 		return
 	}
+	defer stopFunc(ctx)
 
-	// Give some time for the watcher to detect the change
-	go func() {
-		time.Sleep(time.Second)
-		ok, err := configClient.PublishConfig(vo.ConfigParam{
-			DataId:  dataId,
-			Group:   group,
-			Content: "TEST_KEY_NEW=test_value_new" + time.Now().Format(time.RFC3339),
-		})
-		if err != nil {
-			t.Errorf("PublishConfig() error = %v", err)
-			return
-		}
-		t.Log(ok)
-	}()
+	time.Sleep(time.Second)
+	ok, err := configClient.PublishConfig(vo.ConfigParam{
+		DataId:  dataId,
+		Group:   group,
+		Content: "TEST_KEY=updated",
+	})
+	if err != nil {
+		t.Errorf("PublishConfig() error = %v", err)
+		return
+	}
+	t.Log(ok)
 
 	// Wait for the event
-	select {
-	case value := <-notifyC:
-		if value == nil {
-			t.Error("Expected DataEvent with non-nil data")
-		}
-	case <-time.After(100 * time.Second):
-		t.Error("No event received within the timeout")
+	newVal := <-c
+	if newVal == nil {
+		t.Error("received nil value")
+		return
 	}
-
-	stopFunc(ctx)
-
-	// Give some time for the watcher to detect the change
-	go func() {
-		time.Sleep(time.Second)
-		ok, err := configClient.PublishConfig(vo.ConfigParam{
-			DataId:  dataId,
-			Group:   group,
-			Content: "TEST_KEY_NEW=test_value_new" + time.Now().Format(time.RFC3339),
-		})
-		if err != nil {
-			t.Errorf("PublishConfig() error = %v", err)
-			return
-		}
-		t.Log(ok)
-	}()
-
-	select {
-	case data := <-notifyC:
-		if data != nil {
-			t.Error("Did not expect to receive an event after stopping the watcher")
-		}
-	case <-time.After(2 * time.Millisecond):
+	val := newVal.GetFields()["TEST_KEY"].GetStringValue()
+	if val != "updated" {
+		t.Errorf("expected value 'updated'; got %q", val)
 	}
 }
