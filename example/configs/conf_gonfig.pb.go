@@ -7,42 +7,80 @@ import (
 	gonfig "github.com/go-leo/gonfig"
 	resource "github.com/go-leo/gonfig/resource"
 	proto "google.golang.org/protobuf/proto"
-	sync "sync"
+	atomic "sync/atomic"
 )
 
 var (
-	_ApplicationConfig      = &Application{}
-	_ApplicationConfigMutex sync.RWMutex
+	_EnvConfigConfig      atomic.Value
+	_JSONFileConfigConfig atomic.Value
+	_YAMLFileConfigConfig atomic.Value
 )
 
-func GetApplicationConfig() *Application {
-	_ApplicationConfigMutex.RLock()
-	cloned := proto.Clone(_ApplicationConfig)
-	_ApplicationConfigMutex.RUnlock()
-	return cloned.(*Application)
+func init() {
+	_EnvConfigConfig.Store(&EnvConfig{})
+	_JSONFileConfigConfig.Store(&JSONFileConfig{})
+	_YAMLFileConfigConfig.Store(&YAMLFileConfig{})
 }
 
-func SetApplicationConfig(conf *Application) {
-	cloned := proto.Clone(conf).(*Application)
-	_ApplicationConfigMutex.Lock()
-	_ApplicationConfig = cloned
-	_ApplicationConfigMutex.Unlock()
+func GetEnvConfigConfig() *EnvConfig {
+	return proto.Clone(_EnvConfigConfig.Load().(*EnvConfig)).(*EnvConfig)
 }
 
-func LoadApplicationConfig(ctx context.Context, resource resource.Resource) error {
-	conf, err := gonfig.Load[*Application](ctx, resource)
+func GetJSONFileConfigConfig() *JSONFileConfig {
+	return proto.Clone(_JSONFileConfigConfig.Load().(*JSONFileConfig)).(*JSONFileConfig)
+}
+
+func GetYAMLFileConfigConfig() *YAMLFileConfig {
+	return proto.Clone(_YAMLFileConfigConfig.Load().(*YAMLFileConfig)).(*YAMLFileConfig)
+}
+
+func LoadEnvConfigConfig(ctx context.Context, resource resource.Resource) error {
+	conf, err := gonfig.Load[*EnvConfig](ctx, resource)
 	if err != nil {
 		return err
 	}
-	SetApplicationConfig(conf)
+	_EnvConfigConfig.Store(conf)
 	return nil
 }
 
-func WatchApplicationConfig(ctx context.Context, resource resource.Resource) (<-chan struct{}, func(context.Context) error, error) {
-	watcher, err := gonfig.Watch[*Application](ctx, resource)
+func LoadJSONFileConfigConfig(ctx context.Context, resource resource.Resource) error {
+	conf, err := gonfig.Load[*JSONFileConfig](ctx, resource)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-	changedC := make(chan struct{}, 1)
-	return changedC, watcher.Stop, nil
+	_JSONFileConfigConfig.Store(conf)
+	return nil
+}
+
+func LoadYAMLFileConfigConfig(ctx context.Context, resource resource.Resource) error {
+	conf, err := gonfig.Load[*YAMLFileConfig](ctx, resource)
+	if err != nil {
+		return err
+	}
+	_YAMLFileConfigConfig.Store(conf)
+	return nil
+}
+
+func WatchEnvConfigConfig(ctx context.Context, resource resource.Resource, errFunc resource.ErrFunc) (resource.StopFunc, error) {
+	stopFunc, err := gonfig.Watch[*EnvConfig](ctx, resource, func(conf *EnvConfig) { _EnvConfigConfig.Store(conf) }, errFunc)
+	if err != nil {
+		return nil, err
+	}
+	return stopFunc, nil
+}
+
+func WatchJSONFileConfigConfig(ctx context.Context, resource resource.Resource, errFunc resource.ErrFunc) (resource.StopFunc, error) {
+	stopFunc, err := gonfig.Watch[*JSONFileConfig](ctx, resource, func(conf *JSONFileConfig) { _JSONFileConfigConfig.Store(conf) }, errFunc)
+	if err != nil {
+		return nil, err
+	}
+	return stopFunc, nil
+}
+
+func WatchYAMLFileConfigConfig(ctx context.Context, resource resource.Resource, errFunc resource.ErrFunc) (resource.StopFunc, error) {
+	stopFunc, err := gonfig.Watch[*YAMLFileConfig](ctx, resource, func(conf *YAMLFileConfig) { _YAMLFileConfigConfig.Store(conf) }, errFunc)
+	if err != nil {
+		return nil, err
+	}
+	return stopFunc, nil
 }

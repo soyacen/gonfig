@@ -34,64 +34,51 @@ func (f *Generator) Generate() {
 
 	messages := f.EnabledMessage()
 
+	g.P("var (")
 	for _, message := range messages {
-		g.P("var (")
-		g.P(f.GlobalConfig(message), " = &", message.GoIdent, "{}")
-		g.P(f.GlobalConfigMutex(message), " ", RWMutex)
-		g.P(")")
-		g.P()
+		g.P(f.GlobalConfig(message), " ", Value)
+	}
+	g.P(")")
+	g.P()
 
+	g.P("func init() {")
+	for _, message := range messages {
+		g.P(f.GlobalConfig(message), ".Store(&", message.GoIdent, "{})")
+	}
+	g.P("}")
+	g.P()
+
+	for _, message := range messages {
 		g.P("func ", f.GetConfig(message), "() *", message.GoIdent, " {")
-		g.P(f.GlobalConfigMutex(message), ".RLock()")
-		g.P("cloned := ", Clone, "(", f.GlobalConfig(message), ")")
-		g.P(f.GlobalConfigMutex(message), ".RUnlock()")
-		g.P("return ", "cloned.(*", message.GoIdent, ")")
+		g.P("return ", Clone, "(", f.GlobalConfig(message), ".Load().(*", message.GoIdent, ")).(*", message.GoIdent, ")")
 		g.P("}")
 		g.P()
-
-		g.P("func ", f.SetConfig(message), "(conf *", message.GoIdent, ") {")
-		g.P("cloned := ", Clone, "(conf).(*", message.GoIdent, ")")
-		g.P(f.GlobalConfigMutex(message), ".Lock()")
-		g.P(f.GlobalConfig(message), " = cloned")
-		g.P(f.GlobalConfigMutex(message), ".Unlock()")
-		g.P("}")
-		g.P()
-
+	}
+	for _, message := range messages {
 		g.P("func ", f.LoadConfig(message), "(ctx ", Context, ", resource ", Resource, ") error {")
 		g.P("conf, err := ", Load, "[*", message.GoIdent, "](ctx, resource)")
 		g.P("if err != nil {")
 		g.P("return err")
 		g.P("}")
-		g.P(f.SetConfig(message), "(conf)")
+		g.P(f.GlobalConfig(message), ".Store(conf)")
 		g.P("return nil")
 		g.P("}")
 		g.P()
-
-		g.P("func ", f.WatchConfig(message), "(ctx ", Context, ", resource ", Resource, ") (<-chan struct{}, func(", Context, ")error, error) {")
-		g.P("watcher, err := ", Watch, "[*", message.GoIdent, "](ctx, resource)")
+	}
+	for _, message := range messages {
+		g.P("func ", f.WatchConfig(message), "(ctx ", Context, ", resource ", Resource, ", errFunc ", ErrFunc, ") (", StopFunc, ", error) {")
+		g.P("stopFunc, err :=", Watch, "[*", message.GoIdent, "](ctx, resource, func(conf *", message.GoIdent, ") { ", f.GlobalConfig(message), ".Store(conf) }, errFunc)")
 		g.P("if err != nil {")
-		g.P("return nil, nil, err")
+		g.P("return nil, err")
 		g.P("}")
-		g.P("changedC := make(chan struct{}, 1)")
-		g.P("return changedC, watcher.Stop, nil")
+		g.P("return stopFunc, nil")
 		g.P("}")
 		g.P()
-
-		// g.P("func ", f.LoadAndWatchConfig(message), "(ctx ", Context, ", opts ...", Resource, ") error {")
-		// g.P("if err := ", f.LoadConfig(message), "(ctx, opts...); err != nil {")
-		// g.P("return err")
-		// g.P("}")
-		// g.P("return ", f.WatchConfig(message), "(ctx, opts...)")
-		// g.P("}")
 	}
 }
 
-func (f *Generator) GetFieldOption(message *protogen.Message, field *protogen.Field) string {
-	return "Get" + message.GoIdent.GoName + field.GoName + "Options"
-}
-
-func (f *Generator) GlobalConfigMutex(message *protogen.Message) string {
-	return f.GlobalConfig(message) + "Mutex"
+func (f *Generator) Config(message *protogen.Message) string {
+	return message.GoIdent.GoName + "Config"
 }
 
 func (f *Generator) GlobalConfig(message *protogen.Message) string {
@@ -104,10 +91,6 @@ func (f *Generator) GetConfig(message *protogen.Message) string {
 
 func (f *Generator) SetConfig(message *protogen.Message) string {
 	return "Set" + f.Config(message)
-}
-
-func (f *Generator) Config(message *protogen.Message) string {
-	return message.GoIdent.GoName + "Config"
 }
 
 func (f *Generator) LoadConfig(message *protogen.Message) string {
@@ -150,6 +133,11 @@ var (
 )
 
 var (
+	atomicPackage = protogen.GoImportPath("sync/atomic")
+	Value         = atomicPackage.Ident("Value")
+)
+
+var (
 	protoPackage = protogen.GoImportPath("google.golang.org/protobuf/proto")
 	Clone        = protoPackage.Ident("Clone")
 )
@@ -168,4 +156,6 @@ var (
 var (
 	resourcePackage = protogen.GoImportPath("github.com/go-leo/gonfig/resource")
 	Resource        = resourcePackage.Ident("Resource")
+	ErrFunc         = resourcePackage.Ident("ErrFunc")
+	StopFunc        = resourcePackage.Ident("StopFunc")
 )

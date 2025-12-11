@@ -2,6 +2,10 @@
 install:
 	go install ./cmd/protoc-gen-gonfig
 
+.PHONY: dist
+dist:
+	./dist.sh
+
 .PHONY: test
 test:
 	go test -v ./...
@@ -29,3 +33,4 @@ run-example:
 	go run ./example/cmd/main.go
 
 all: compile-proto install compile-example run-example
+
