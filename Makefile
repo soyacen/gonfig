@@ -16,7 +16,7 @@ compile-proto:
 	--proto_path=. \
 	--go_out=. \
 	--go_opt=paths=source_relative \
-	proto/leo/gonfig/*.proto
+	proto/gonfig/*.proto
 
 .PHONY: compile-example
 compile-example:

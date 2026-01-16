@@ -14,7 +14,7 @@ gonfig 是一个功能强大的 Go 语言配置管理库，支持多种配置源
 ## 安装
 
 ```bash
-go get github.com/go-leo/gonfig
+go get github.com/soyacen/gonfig
 ```
 
 ## 快速开始
@@ -26,12 +26,12 @@ go get github.com/go-leo/gonfig
 ```protobuf
 syntax = "proto3";
 package example;
-option go_package = "github.com/go-leo/gonfig/example/configs;configs";
+option go_package = "github.com/soyacen/gonfig/example/configs;configs";
 
-import "leo/gonfig/annotations.proto";
+import "gonfig/annotations.proto";
 
 message AppConfig {
-  option (leo.gonfig.enable) = true;
+  option (gonfig.enable) = true;
   
   string addr = 1;
   int32 port = 2;
@@ -55,8 +55,8 @@ import (
     "fmt"
     "os"
     
-    "github.com/go-leo/gonfig/example/configs"
-    "github.com/go-leo/gonfig/resource/env"
+    "github.com/soyacen/gonfig/example/configs"
+    "github.com/soyacen/gonfig/resource/env"
 )
 
 func main() {
@@ -104,7 +104,7 @@ defer stop(context.TODO())
 ### 1. 环境变量 (env)
 
 ```go
-import "github.com/go-leo/gonfig/resource/env"
+import "github.com/soyacen/gonfig/resource/env"
 
 resource, err := env.New("PREFIX_", time.Second)
 ```
@@ -112,7 +112,7 @@ resource, err := env.New("PREFIX_", time.Second)
 ### 2. 文件 (file)
 
 ```go
-import "github.com/go-leo/gonfig/resource/file"
+import "github.com/soyacen/gonfig/resource/file"
 
 resource, err := file.New("/path/to/config.json")
 ```
@@ -120,7 +120,7 @@ resource, err := file.New("/path/to/config.json")
 ### 3. Consul
 
 ```go
-import "github.com/go-leo/gonfig/resource/consul"
+import "github.com/soyacen/gonfig/resource/consul"
 
 client, _ := api.NewClient(api.DefaultConfig())
 resource, err := consul.New(client, "config/key")
@@ -129,7 +129,7 @@ resource, err := consul.New(client, "config/key")
 ### 4. Nacos
 
 ```go
-import "github.com/go-leo/gonfig/resource/nacos"
+import "github.com/soyacen/gonfig/resource/nacos"
 
 resource, err := nacos.New(client, "group", "dataId")
 ```
@@ -143,11 +143,11 @@ resource, err := nacos.New(client, "group", "dataId")
 
 ## Protobuf 注解
 
-使用 `leo.gonfig.enable = true` 注解启用配置生成功能：
+使用 `gonfig.enable = true` 注解启用配置生成功能：
 
 ```protobuf
 message Config {
-  option (leo.gonfig.enable) = true;
+  option (gonfig.enable) = true;
   
   string field = 1;
 }
@@ -155,9 +155,9 @@ message Config {
 
 这会生成以下辅助函数：
 
-- [GetConfig()](file:///home/soyacen/Workspace/github.com/go-leo/gonfig/cmd/protoc-gen-gonfig/gen/generator.go#L87-L89) - 获取当前配置实例
-- [LoadConfig()](file:///home/soyacen/Workspace/github.com/go-leo/gonfig/cmd/protoc-gen-gonfig/gen/generator.go#L95-L97) - 从资源加载配置
-- [WatchConfig()](file:///home/soyacen/Workspace/github.com/go-leo/gonfig/cmd/protoc-gen-gonfig/gen/generator.go#L99-L101) - 监听配置变化
+- [GetConfig()](file:///home/soyacen/Workspace/github.com/soyacen/gonfig/cmd/protoc-gen-gonfig/gen/generator.go#L87-L89) - 获取当前配置实例
+- [LoadConfig()](file:///home/soyacen/Workspace/github.com/soyacen/gonfig/cmd/protoc-gen-gonfig/gen/generator.go#L95-L97) - 从资源加载配置
+- [WatchConfig()](file:///home/soyacen/Workspace/github.com/soyacen/gonfig/cmd/protoc-gen-gonfig/gen/generator.go#L99-L101) - 监听配置变化
 
 ## 许可证
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/go-leo/gonfig/format"
+	"github.com/soyacen/gonfig/format"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

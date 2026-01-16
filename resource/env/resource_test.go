@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/format/env"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/format/env"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

@@ -14,8 +14,8 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/resource"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/resource"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

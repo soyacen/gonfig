@@ -3,7 +3,7 @@ package config
 import (
 	"slices"
 
-	"github.com/go-leo/gonfig/proto/leo/gonfig"
+	"github.com/soyacen/gonfig/proto/gonfig"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
@@ -148,13 +148,13 @@ var (
 )
 
 var (
-	configxPackage = protogen.GoImportPath("github.com/go-leo/gonfig")
+	configxPackage = protogen.GoImportPath("github.com/soyacen/gonfig")
 	Load           = configxPackage.Ident("Load")
 	Watch          = configxPackage.Ident("Watch")
 )
 
 var (
-	resourcePackage = protogen.GoImportPath("github.com/go-leo/gonfig/resource")
+	resourcePackage = protogen.GoImportPath("github.com/soyacen/gonfig/resource")
 	Resource        = resourcePackage.Ident("Resource")
 	ErrFunc         = resourcePackage.Ident("ErrFunc")
 	StopFunc        = resourcePackage.Ident("StopFunc")

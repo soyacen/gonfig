@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/resource"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/resource"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

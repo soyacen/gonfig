@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/format/env"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/format/env"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"

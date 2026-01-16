@@ -1,4 +1,4 @@
-module github.com/go-leo/gonfig
+module github.com/soyacen/gonfig
 
 go 1.23.0
 

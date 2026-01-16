@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	config "github.com/go-leo/gonfig/cmd/protoc-gen-gonfig/gen"
+	config "github.com/soyacen/gonfig/cmd/protoc-gen-gonfig/gen"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )

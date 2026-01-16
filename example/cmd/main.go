@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-leo/gonfig/example/configs"
-	"github.com/go-leo/gonfig/resource/env"
-	"github.com/go-leo/gonfig/resource/file"
+	"github.com/soyacen/gonfig/example/configs"
+	"github.com/soyacen/gonfig/resource/env"
+	"github.com/soyacen/gonfig/resource/file"
 )
 
 func main() {

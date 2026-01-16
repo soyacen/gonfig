@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/go-leo/gonfig/format/json"
-	_ "github.com/go-leo/gonfig/format/yaml"
+	_ "github.com/soyacen/gonfig/format/json"
+	_ "github.com/soyacen/gonfig/format/yaml"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )

@@ -12,8 +12,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/resource"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/resource"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
 	"github.com/hashicorp/go-hclog"

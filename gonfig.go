@@ -3,7 +3,7 @@ package gonfig
 import (
 	"context"
 
-	"github.com/go-leo/gonfig/resource"
+	"github.com/soyacen/gonfig/resource"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"

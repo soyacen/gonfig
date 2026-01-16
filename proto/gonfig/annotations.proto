@@ -1,6 +1,6 @@
 syntax = "proto3";
-package leo.gonfig;
-option go_package = "github.com/go-leo/gonfig/proto/leo/gonfig;gonfig";
+package gonfig;
+option go_package = "github.com/soyacen/gonfig/proto/gonfig;gonfig";
 
 import "google/protobuf/descriptor.proto";
 

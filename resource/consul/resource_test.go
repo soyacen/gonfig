@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/format/env"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/format/env"
 	"github.com/hashicorp/consul/api"
 	_ "golang.org/x/exp/maps"
 	_ "golang.org/x/net/http2"

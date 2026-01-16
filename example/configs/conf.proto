@@ -1,22 +1,22 @@
 syntax = "proto3";
-package leo.gonfig.example;
-option go_package = "github.com/go-leo/gonfig/example/configs;configs";
+package gonfig.example;
+option go_package = "github.com/soyacen/gonfig/example/configs;configs";
 
-import "leo/gonfig/annotations.proto";
+import "gonfig/annotations.proto";
 
 message EnvConfig {
-  option (leo.gonfig.enable) = true;
+  option (gonfig.enable) = true;
   string LEO_RUN_ENV = 1;
 }
 
 message JSONFileConfig {
-  option (leo.gonfig.enable) = true;
+  option (gonfig.enable) = true;
   string addr = 1;
   int32 port = 2;
 }
 
 message YAMLFileConfig {
-  option (leo.gonfig.enable) = true;
+  option (gonfig.enable) = true;
   string network = 1;
   string addr = 2;
   string password = 3;

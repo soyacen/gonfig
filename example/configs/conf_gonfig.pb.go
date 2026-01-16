@@ -4,8 +4,8 @@ package configs
 
 import (
 	context "context"
-	gonfig "github.com/go-leo/gonfig"
-	resource "github.com/go-leo/gonfig/resource"
+	gonfig "github.com/soyacen/gonfig"
+	resource "github.com/soyacen/gonfig/resource"
 	proto "google.golang.org/protobuf/proto"
 	atomic "sync/atomic"
 )

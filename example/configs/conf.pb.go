@@ -7,7 +7,7 @@
 package configs
 
 import (
-	_ "github.com/go-leo/gonfig/proto/leo/gonfig"
+	_ "github.com/soyacen/gonfig/proto/gonfig"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -200,7 +200,7 @@ const file_configs_conf_proto_rawDesc = "" +
 	"\anetwork\x18\x01 \x01(\tR\anetwork\x12\x12\n" +
 	"\x04addr\x18\x02 \x01(\tR\x04addr\x12\x1a\n" +
 	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x0e\n" +
-	"\x02db\x18\x04 \x01(\x05R\x02db:\x04\xa8\xb6\"\x01B2Z0github.com/go-leo/gonfig/example/configs;configsb\x06proto3"
+	"\x02db\x18\x04 \x01(\x05R\x02db:\x04\xa8\xb6\"\x01B2Z0github.com/soyacen/gonfig/example/configs;configsb\x06proto3"
 
 var (
 	file_configs_conf_proto_rawDescOnce sync.Once

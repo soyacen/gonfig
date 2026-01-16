@@ -1,9 +1,9 @@
-module github.com/go-leo/gonfig/resource/consul
+module github.com/soyacen/gonfig/resource/consul
 
 go 1.23.0
 
 require (
-	github.com/go-leo/gonfig v0.0.0-00010101000000-000000000000
+	github.com/soyacen/gonfig v0.0.0-00010101000000-000000000000
 	github.com/hashicorp/consul/api v1.32.0
 	github.com/hashicorp/go-hclog v1.6.3
 	golang.org/x/exp v0.0.0-20250811191247-51f88131bc50
@@ -29,4 +29,4 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 )
 
-replace github.com/go-leo/gonfig => ../../
+replace github.com/soyacen/gonfig => ../../

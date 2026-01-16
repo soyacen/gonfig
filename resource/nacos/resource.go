@@ -11,8 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/go-leo/gonfig/format"
-	"github.com/go-leo/gonfig/resource"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/resource"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"google.golang.org/protobuf/types/known/structpb"
