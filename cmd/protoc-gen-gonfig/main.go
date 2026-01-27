@@ -33,7 +33,9 @@ func generate(plugin *protogen.Plugin) error {
 
 		// 配置生成
 		configGenerator := config.NewGenerator(plugin, file)
-		configGenerator.Generate()
+		if err := configGenerator.Generate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

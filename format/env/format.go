@@ -1,9 +1,7 @@
 package env
 
 import (
-	"bytes"
-	"fmt"
-
+	"github.com/joho/godotenv"
 	"github.com/soyacen/gonfig/format"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -27,15 +25,13 @@ type Env struct{}
 // - *structpb.Struct: Parsed structured data with string values
 // - error: Error if parsing fails
 func (Env) Parse(data []byte) (*structpb.Struct, error) {
-	s := bytes.Split(data, []byte("\n"))
-	m := make(map[string]any, len(s))
-
-	for _, v := range s {
-		pair := bytes.SplitN(v, []byte("="), 2)
-		if len(pair) != 2 {
-			return nil, fmt.Errorf("invalid line: %s", v)
-		}
-		m[string(pair[0])] = string(pair[1])
+	m, err := godotenv.UnmarshalBytes(data)
+	if err != nil {
+		return nil, err
 	}
-	return structpb.NewStruct(m)
+	v := make(map[string]any)
+	for key, value := range m {
+		v[key] = value
+	}
+	return structpb.NewStruct(v)
 }

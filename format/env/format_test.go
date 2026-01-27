@@ -1,88 +1,164 @@
 package env
 
 import (
+	"reflect"
 	"testing"
 )
 
-func TestParse_ValidEnvFormat(t *testing.T) {
-	data := []byte("KEY1=VALUE1\nKEY2=VALUE2")
-	result, err := Env{}.Parse(data)
-
-	// Expect error due to redundant UnmarshalJSON call in current implementation
-	if err == nil {
-		t.Errorf("Expected error from UnmarshalJSON but got nil")
-	}
-	if result != nil {
-		t.Errorf("Expected nil result but got %v", result)
-	}
-}
-
-func TestParse_MalformedInput(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   []byte
-		wantErr bool
-	}{
-		{
-			name:    "MissingValue",
-			input:   []byte("KEY"),
-			wantErr: true,
-		},
-		{
-			name:    "MultipleEquals",
-			input:   []byte("KEY=VALUE=MORE"),
-			wantErr: true,
-		},
-		{
-			name:    "EmptyLine",
-			input:   []byte("\nKEY=VALUE\n"),
-			wantErr: true,
-		},
+// TestParse_Success tests successful parsing of valid environment variables format.
+func TestParse_Success(t *testing.T) {
+	data := []byte("NAME=Alice\nAGE=30\nIS_STUDENT=true")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := Env{}.Parse(tt.input)
-			if tt.wantErr && err == nil {
-				t.Errorf("Expected error but got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("Unexpected error: %v", err)
-			}
-			if result != nil {
-				t.Errorf("Expected nil result but got %v", result)
-			}
-		})
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	expectedMap := map[string]interface{}{
+		"NAME":       "Alice",
+		"AGE":        "30",
+		"IS_STUDENT": "true",
+	}
+
+	if !reflect.DeepEqual(expectedMap, result.AsMap()) {
+		t.Errorf("Expected map %v, got %v", expectedMap, result.AsMap())
 	}
 }
 
-func TestParse_CornerCases(t *testing.T) {
-	tests := []struct {
-		name    string
-		input   []byte
-		wantErr bool
-	}{
-		{
-			name:    "Whitespace",
-			input:   []byte("  KEY  =  VALUE  "),
-			wantErr: true,
-		},
-		{
-			name:    "SpecialCharacters",
-			input:   []byte("PATH=/usr/bin:$HOME"),
-			wantErr: true,
-		},
+// TestParse_EmptyData tests parsing of empty data.
+func TestParse_EmptyData(t *testing.T) {
+	data := []byte("")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := Env{}.Parse(tt.input)
-			if tt.wantErr && err == nil {
-				t.Errorf("Expected error but got nil")
-			}
-			if result != nil {
-				t.Errorf("Expected nil result but got %v", result)
-			}
-		})
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	expectedMap := map[string]interface{}{}
+
+	if !reflect.DeepEqual(expectedMap, result.AsMap()) {
+		t.Errorf("Expected empty map, got %v", result.AsMap())
+	}
+}
+
+// TestParse_SingleVariable tests parsing of a single environment variable.
+func TestParse_SingleVariable(t *testing.T) {
+	data := []byte("KEY=value")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	expectedMap := map[string]interface{}{
+		"KEY": "value",
+	}
+
+	if !reflect.DeepEqual(expectedMap, result.AsMap()) {
+		t.Errorf("Expected map %v, got %v", expectedMap, result.AsMap())
+	}
+}
+
+// TestParse_ValuesWithSpecialCharacters tests parsing of values containing special characters.
+func TestParse_ValuesWithSpecialCharacters(t *testing.T) {
+	data := []byte("URL=https://example.com:8080\nPASSWORD=p@ss!w0rd#123")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	expectedMap := map[string]interface{}{
+		"URL":      "https://example.com:8080",
+		"PASSWORD": "p@ss!w0rd#123",
+	}
+
+	if !reflect.DeepEqual(expectedMap, result.AsMap()) {
+		t.Errorf("Expected map %v, got %v", expectedMap, result.AsMap())
+	}
+}
+
+// TestParse_ValuesWithEquals tests parsing of values containing equals sign.
+func TestParse_ValuesWithEquals(t *testing.T) {
+	data := []byte("FORMULA=a=b+c\nCONNECTION_STRING=host=localhost;port=5432")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	expectedMap := map[string]interface{}{
+		"FORMULA":           "a=b+c",
+		"CONNECTION_STRING": "host=localhost;port=5432",
+	}
+
+	if !reflect.DeepEqual(expectedMap, result.AsMap()) {
+		t.Errorf("Expected map %v, got %v", expectedMap, result.AsMap())
+	}
+}
+
+// TestParse_QuotedValues tests parsing of quoted values.
+func TestParse_QuotedValues(t *testing.T) {
+	data := []byte("NAME=\"John Doe\"\nDESCRIPTION='Multi word value'")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	// godotenv removes quotes from values
+	resultMap := result.AsMap()
+	if resultMap["NAME"] != "John Doe" {
+		t.Errorf("Expected 'John Doe', got %v", resultMap["NAME"])
+	}
+	if resultMap["DESCRIPTION"] != "Multi word value" {
+		t.Errorf("Expected 'Multi word value', got %v", resultMap["DESCRIPTION"])
+	}
+}
+
+// TestParse_EmptyValue tests parsing of variables with empty values.
+func TestParse_EmptyValue(t *testing.T) {
+	data := []byte("EMPTY=\nKEY=value")
+	parser := Env{}
+	result, err := parser.Parse(data)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if result == nil {
+		t.Fatalf("Expected non-nil result, got nil")
+	}
+
+	expectedMap := map[string]interface{}{
+		"EMPTY": "",
+		"KEY":   "value",
+	}
+
+	if !reflect.DeepEqual(expectedMap, result.AsMap()) {
+		t.Errorf("Expected map %v, got %v", expectedMap, result.AsMap())
 	}
 }

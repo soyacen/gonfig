@@ -2,10 +2,6 @@
 install:
 	go install ./cmd/protoc-gen-gonfig
 
-.PHONY: dist
-dist:
-	./dist.sh
-
 .PHONY: test
 test:
 	go test -v ./...
@@ -18,11 +14,10 @@ compile-proto:
 	--go_opt=paths=source_relative \
 	proto/gonfig/*.proto
 
-.PHONY: compile-example
-compile-example:
+.PHONY: example
+example:
 	protoc \
 	--proto_path=. \
-	--proto_path=./proto \
 	--go_out=. \
 	--go_opt=paths=source_relative \
 	--gonfig_out=. \
