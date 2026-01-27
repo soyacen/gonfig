@@ -1,6 +1,6 @@
 module github.com/soyacen/gonfig/example/nacos
 
-go 1.24.0
+go 1.25.0
 
 replace github.com/soyacen/gonfig => ../../
 
