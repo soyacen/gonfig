@@ -2,6 +2,8 @@ module github.com/soyacen/gonfig/resource/consul
 
 go 1.23.0
 
+replace github.com/soyacen/gonfig => ../../
+
 require (
 	github.com/soyacen/gonfig v0.0.5
 	github.com/hashicorp/consul/api v1.32.0

@@ -2,6 +2,8 @@ module github.com/soyacen/gonfig/resource/nacos
 
 go 1.23.0
 
+replace github.com/soyacen/gonfig => ../../
+
 require (
 	github.com/nacos-group/nacos-sdk-go/v2 v2.3.5
 	github.com/soyacen/gonfig v0.0.5
