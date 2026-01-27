@@ -5,7 +5,7 @@ go 1.23.0
 replace github.com/soyacen/gonfig => ../../
 
 require (
-	github.com/soyacen/gonfig v0.0.5
+	github.com/soyacen/gonfig v0.0.6
 	github.com/hashicorp/consul/api v1.32.0
 	github.com/hashicorp/go-hclog v1.6.3
 	golang.org/x/exp v0.0.0-20250811191247-51f88131bc50
@@ -31,4 +31,4 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 )
 
-replace github.com/soyacen/gonfig v0.0.5
+replace github.com/soyacen/gonfig v0.0.6
