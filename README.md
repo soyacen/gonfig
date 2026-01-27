@@ -14,13 +14,13 @@ gonfig 是一个功能强大的 Go 语言配置管理库，支持多种配置源
 ## 安装
 
 ```bash
-go get github.com/soyacen/gonfig@latest
+go get github.com/soyacen/gonfig
 ```
 
 ## 安装 protoc-gen-gonfig 插件
 
 ```bash
-go install github.com/soyacen/gonfig/cmd/protoc-gen-gonfig@latest
+make install
 ```
 
 ## 快速开始
@@ -47,119 +47,64 @@ message Config {
 protoc --go_out=. --gonfig_out=. configs/*.proto
 ```
 
-### 2. 使用 Nacos 配置中心
+### 2. 使用环境变量配置
 
 ```go
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"strings"
-	"time"
-
-	"github.com/nacos-group/nacos-sdk-go/v2/clients"
-	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
-	"github.com/soyacen/gonfig/example/configs"
-	"github.com/soyacen/gonfig/resource/nacos"
+    "context"
+    "fmt"
+    "os"
+    "time"
+    
+    "github.com/soyacen/gonfig/example/configs"
+    "github.com/soyacen/gonfig/resource/env"
 )
 
 func main() {
-	configClient, err := nacosFactory()
-	if err != nil {
-		log.Fatal(err)
-	}
+    // 设置环境变量
+    os.Setenv("ADDR", "localhost")
+    os.Setenv("PORT", "8080")
+    os.Setenv("ENVIRONMENT", "development")
+    
+    // 创建环境变量资源配置
+    envResource, err := env.New("", time.Second)
+    if err != nil {
+        panic(err)
+    }
+    
+    // 加载配置
+    if err := configs.LoadConfig(context.TODO(), envResource); err != nil {
+        panic(err)
+    }
+    
+    // 获取配置
+    config := configs.GetConfig()
+    fmt.Printf("Address: %s\n", config.Addr)
+    fmt.Printf("Port: %d\n", config.Port)
+    fmt.Printf("Environment: %s\n", config.Environment)
+    
+    // 也可以直接获取字段值
+    fmt.Printf("Direct field access - Address: %s\n", configs.GetAddr())
+    fmt.Printf("Direct field access - Port: %d\n", configs.GetPort())
+    fmt.Printf("Direct field access - Environment: %s\n", configs.GetEnvironment())
+}
+```
 
-	errFunc := func(err error) {
-		fmt.Println(err)
-	}
+### 3. 监听配置变化
 
-	dataId := "config.yaml"
-	group := "example"
-	_, err = configClient.PublishConfig(vo.ConfigParam{
-		DataId:  dataId,
-		Group:   group,
-		Content: string(genConfigYaml()),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		_, err = configClient.DeleteConfig(vo.ConfigParam{
-			DataId: dataId,
-			Group:  group,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-	time.Sleep(5 * time.Second)
-	rsc, err := nacos.New(configClient, group, dataId)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// 加载配置
-	if err := configs.LoadConfig(context.TODO(), rsc); err != nil {
-		panic(err)
-	}
-	// 输出配置
-	fmt.Println(configs.GetConfig())
-
-	yamlStop, err := configs.WatchConfig(context.Background(), rsc, errFunc)
-	if err != nil {
-		panic(err)
-	}
-	defer yamlStop(context.Background())
-	go func() {
-		time.Sleep(time.Second)
-		content := string(genConfigYaml())
-		content = strings.ReplaceAll(content, "123456", "654321")
-		_, err = configClient.PublishConfig(vo.ConfigParam{
-			DataId:  dataId,
-			Group:   group,
-			Content: content,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-	time.Sleep(5 * time.Second)
-	fmt.Println(configs.GetConfig())
+```go
+errFunc := func(err error) {
+    fmt.Printf("配置监听错误: %v\n", err)
 }
 
-func genConfigYaml() []byte {
-	return []byte(`db:
-    dsn: mysql://user:password@tcp(127.0.0.1:3306)/db?charset=utf8mb4&parseTime=True&loc=Local
-redis:
-    addr: 127.0.0.1:6379
-    db: 1
-    password: "123456"
-server:
-    addr: 127.0.0.1
-    port: 8080`)
+// 开始监听配置变化
+stop, err := configs.WatchConfig(context.TODO(), envResource, errFunc)
+if err != nil {
+    panic(err)
 }
-
-func nacosFactory() (config_client.IConfigClient, error) {
-	sc := []constant.ServerConfig{
-		*constant.NewServerConfig("127.0.0.1", 8848),
-	}
-	cc := *constant.NewClientConfig(
-		constant.WithTimeoutMs(5000),
-		constant.WithNotLoadCacheAtStart(true),
-		constant.WithCacheDir("/tmp/nacos/cache"),
-		constant.WithLogLevel("debug"),
-		constant.WithLogDir("/tmp/nacos.log"),
-	)
-	return clients.NewConfigClient(
-		vo.NacosClientParam{
-			ClientConfig:  &cc,
-			ServerConfigs: sc,
-		},
-	)
-}
+defer stop(context.TODO())
 ```
 
 ## 支持的配置源
@@ -202,7 +147,7 @@ resource, err := nacos.New(client, "group", "dataId")
 - **JSON**: `.json` 文件扩展名
 - **YAML**: `.yaml` 或 `.yml` 文件扩展名
 - **TOML**: `.toml` 文件扩展名
-- **ENV**:  `.env` 文件扩展名或环境变量格式（键值对）
+- **ENV**: 环境变量格式（键值对）
 
 ## Protobuf 消息命名约定
 
