@@ -14,13 +14,13 @@ gonfig 是一个功能强大的 Go 语言配置管理库，支持多种配置源
 ## 安装
 
 ```bash
-go get github.com/soyacen/gonfig
+go get github.com/soyacen/gonfig@latest
 ```
 
 ## 安装 protoc-gen-gonfig 插件
 
 ```bash
-make install
+go get github.com/soyacen/gonfig/cmd/protoc-gen-gonfig@latest
 ```
 
 ## 快速开始
