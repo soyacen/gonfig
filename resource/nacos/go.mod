@@ -4,7 +4,7 @@ go 1.23.0
 
 require (
 	github.com/nacos-group/nacos-sdk-go/v2 v2.3.5
-	github.com/soyacen/gonfig v0.0.0-00010101000000-000000000000
+	github.com/soyacen/gonfig v0.0.5
 	golang.org/x/crypto v0.41.0
 	golang.org/x/net v0.43.0
 	golang.org/x/sync v0.16.0
@@ -64,4 +64,4 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
 
-replace github.com/soyacen/gonfig => ../../
+replace github.com/soyacen/gonfig v0.0.5
