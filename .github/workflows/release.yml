@@ -70,6 +70,10 @@ jobs:
           
       - name: Create and push tag
         run: |
+          git tag resource/consul/$VERSION
+          git push origin resource/consul/$VERSION
+          git tag resource/nacos/$VERSION
+          git push origin resource/nacos/$VERSION
           git tag ${{ env.VERSION }}
           git push origin ${{ env.VERSION }}
           echo "Tag ${{ env.VERSION }} created and pushed successfully"
