@@ -6,7 +6,7 @@ replace github.com/soyacen/gonfig => ../../
 
 require (
 	github.com/nacos-group/nacos-sdk-go/v2 v2.3.5
-	github.com/soyacen/gonfig v0.0.7
+	github.com/soyacen/gonfig v0.0.8
 	golang.org/x/crypto v0.47.0
 	golang.org/x/net v0.49.0
 	golang.org/x/sync v0.19.0

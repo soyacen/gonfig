@@ -7,7 +7,7 @@ replace github.com/soyacen/gonfig => ../../
 require (
 	github.com/hashicorp/consul/api v1.33.2
 	github.com/hashicorp/go-hclog v1.6.3
-	github.com/soyacen/gonfig v0.0.7
+	github.com/soyacen/gonfig v0.0.8
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
 	golang.org/x/net v0.43.0
 	golang.org/x/sys v0.40.0
