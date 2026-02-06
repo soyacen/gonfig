@@ -23,7 +23,7 @@ import (
 )
 
 func init() {
-	resource.RegisterResource("nacos", Factory{})
+	resource.Register("nacos", Factory{})
 }
 
 var _ resource.Resource = (*Resource)(nil)

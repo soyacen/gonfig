@@ -18,7 +18,7 @@ func Load[Config proto.Message](ctx context.Context, dsn string) (Config, error)
 	if err != nil {
 		return config, fmt.Errorf("gonfig: parse dsn failed: %w", err)
 	}
-	factory, ok := resource.GetFactory(u.Scheme)
+	factory, ok := resource.Get(u.Scheme)
 	if !ok {
 		return config, errors.New("gonfig: resource factory not found for dsn " + dsn)
 	}
@@ -38,7 +38,7 @@ func Watch[Config proto.Message](ctx context.Context, dsn string, notifyFunc fun
 	if err != nil {
 		return nil, fmt.Errorf("gonfig: parse dsn failed: %w", err)
 	}
-	factory, ok := resource.GetFactory(u.Scheme)
+	factory, ok := resource.Get(u.Scheme)
 	if !ok {
 		return nil, errors.New("gonfig: resource factory not found for dsn " + dsn)
 	}

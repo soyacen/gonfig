@@ -24,7 +24,7 @@ import (
 )
 
 func init() {
-	resource.RegisterResource("consul", Factory{})
+	resource.Register("consul", Factory{})
 }
 
 var _ resource.Resource = (*Resource)(nil)

@@ -16,4 +16,10 @@ import (
 	// YAML format support
 	// Automatically registers yaml format decoder when imported
 	_ "github.com/soyacen/gonfig/format/yaml"
+
+	// File resource support
+	_ "github.com/soyacen/gonfig/resource/file"
+
+	// Environment variable resource support
+	_ "github.com/soyacen/gonfig/resource/env"
 )
