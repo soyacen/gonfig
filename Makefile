@@ -6,14 +6,6 @@ install:
 test:
 	go test -v ./...
 
-.PHONY: compile-proto
-compile-proto:
-	protoc \
-	--proto_path=. \
-	--go_out=. \
-	--go_opt=paths=source_relative \
-	proto/gonfig/*.proto
-
 .PHONY: example
 example:
 	protoc \
@@ -27,5 +19,5 @@ example:
 run-example:
 	go run ./example/cmd/main.go
 
-all: compile-proto install compile-example run-example
+all: install compile-example run-example
 

@@ -9,7 +9,7 @@ var resourceMu sync.RWMutex
 
 var resources = make(map[string]Factory)
 
-func RegisterResource(name string, resource Factory) {
+func RegisterFactory(name string, resource Factory) {
 	if resource == nil {
 		panic("gonfig: RegisterResource resource is nil")
 	}
@@ -22,11 +22,7 @@ func RegisterResource(name string, resource Factory) {
 	resources[name] = resource
 }
 
-func Register(name string, resource Factory) {
-	RegisterResource(name, resource)
-}
-
-func GetResource(name string) (Factory, bool) {
+func GetFactory(name string) (Factory, bool) {
 	name = strings.ToLower(name)
 	resourceMu.RLock()
 	defer resourceMu.RUnlock()

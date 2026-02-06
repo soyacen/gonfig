@@ -4,21 +4,22 @@ package configs
 
 import (
 	context "context"
-	atomic "sync/atomic"
-
 	gonfig "github.com/soyacen/gonfig"
 	resource "github.com/soyacen/gonfig/resource"
 	proto "google.golang.org/protobuf/proto"
+	atomic "sync/atomic"
 )
 
-var _Config atomic.Value
+var (
+	_Config atomic.Value
+)
 
 func init() {
 	_Config.Store(&Config{})
 }
 
-func LoadConfig(ctx context.Context, resource resource.Resource) error {
-	conf, err := gonfig.Load[*Config](ctx, resource)
+func LoadConfig(ctx context.Context, dsn string) error {
+	conf, err := gonfig.Load[*Config](ctx, dsn)
 	if err != nil {
 		return err
 	}
@@ -26,8 +27,8 @@ func LoadConfig(ctx context.Context, resource resource.Resource) error {
 	return nil
 }
 
-func WatchConfig(ctx context.Context, resource resource.Resource, errFunc resource.ErrFunc) (resource.StopFunc, error) {
-	stopFunc, err := gonfig.Watch[*Config](ctx, resource, func(conf *Config) { _Config.Store(conf) }, errFunc)
+func WatchConfig(ctx context.Context, dsn string, errFunc resource.ErrFunc) (resource.StopFunc, error) {
+	stopFunc, err := gonfig.Watch[*Config](ctx, dsn, func(conf *Config) { _Config.Store(conf) }, errFunc)
 	if err != nil {
 		return nil, err
 	}

@@ -41,8 +41,8 @@ func (f *Generator) Generate() error {
 	g.P()
 
 	for _, message := range messages {
-		g.P("func ", f.LoadConfig(message), "(ctx ", Context, ", resource ", Resource, ") error {")
-		g.P("conf, err := ", Load, "[*", message.GoIdent, "](ctx, resource)")
+		g.P("func ", f.LoadConfig(message), "(ctx ", Context, ", dsn string) error {")
+		g.P("conf, err := ", Load, "[*", message.GoIdent, "](ctx, dsn)")
 		g.P("if err != nil {")
 		g.P("return err")
 		g.P("}")
@@ -50,8 +50,8 @@ func (f *Generator) Generate() error {
 		g.P("return nil")
 		g.P("}")
 		g.P()
-		g.P("func ", f.WatchConfig(message), "(ctx ", Context, ", resource ", Resource, ", errFunc ", ErrFunc, ") (", StopFunc, ", error) {")
-		g.P("stopFunc, err :=", Watch, "[*", message.GoIdent, "](ctx, resource, func(conf *", message.GoIdent, ") { ", f.GlobalConfig(message), ".Store(conf) }, errFunc)")
+		g.P("func ", f.WatchConfig(message), "(ctx ", Context, ", dsn string, errFunc ", ErrFunc, ") (", StopFunc, ", error) {")
+		g.P("stopFunc, err :=", Watch, "[*", message.GoIdent, "](ctx, dsn, func(conf *", message.GoIdent, ") { ", f.GlobalConfig(message), ".Store(conf) }, errFunc)")
 		g.P("if err != nil {")
 		g.P("return nil, err")
 		g.P("}")
