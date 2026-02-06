@@ -3,29 +3,9 @@ package resource
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )
-
-// ... (other types)
-
-// New creates a new resource based on the provided DSN.
-// It parses the DSN to determine the scheme and uses the registered factory to create the resource.
-func New(ctx context.Context, dsn string) (Resource, error) {
-	scheme := ""
-	if i := strings.Index(dsn, "://"); i != -1 {
-		scheme = dsn[:i]
-	}
-
-	factory, ok := GetResource(scheme)
-	if !ok {
-		return nil, fmt.Errorf("gonfig: unknown resource scheme: %s", scheme)
-	}
-
-	return factory.New(ctx, dsn)
-}
 
 // NotifyFunc defines the function type for notification callbacks.
 // The value parameter is a pointer to structpb.Struct.
