@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
-var Version = "v0.0.11"
+var Version = "v0.0.12"
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
