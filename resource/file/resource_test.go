@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/soyacen/gonfig/format/json"
 	_ "github.com/soyacen/gonfig/format/yaml"
+	"github.com/soyacen/gonfig/resource"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -143,5 +144,84 @@ key:
 	value = newValue.GetFields()["key"].GetStructValue().GetFields()["nested_key"].GetStringValue()
 	if value != "updated_value" {
 		t.Errorf("expected value 'updated_value'; got %q", value)
+	}
+}
+
+func TestFactory_New(t *testing.T) {
+	tests := []struct {
+		name     string
+		dsn      string
+		wantFile string
+		wantErr  bool
+	}{
+		{
+			name:     "simple path",
+			dsn:      "/path/to/config.yaml",
+			wantFile: "/path/to/config.yaml",
+			wantErr:  false,
+		},
+		{
+			name:     "with scheme",
+			dsn:      "file:///path/to/config.yaml",
+			wantFile: "/path/to/config.yaml",
+			wantErr:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := Factory{}
+			r, err := f.New(context.Background(), tt.dsn)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Factory.New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+
+			if r.(*Resource).filename != tt.wantFile {
+				t.Errorf("filename = %v, want %v", r.(*Resource).filename, tt.wantFile)
+			}
+		})
+	}
+}
+
+func TestResource_New(t *testing.T) {
+	tests := []struct {
+		name     string
+		dsn      string
+		wantFile string
+		wantErr  bool
+	}{
+		{
+			name:     "default file",
+			dsn:      "/path/to/config.yaml",
+			wantFile: "/path/to/config.yaml",
+			wantErr:  false,
+		},
+		{
+			name:     "file scheme",
+			dsn:      "file:///path/to/config.yaml",
+			wantFile: "/path/to/config.yaml",
+			wantErr:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, err := resource.New(context.Background(), tt.dsn)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("resource.New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+
+			if r.(*Resource).filename != tt.wantFile {
+				t.Errorf("filename = %v, want %v", r.(*Resource).filename, tt.wantFile)
+			}
+		})
 	}
 }

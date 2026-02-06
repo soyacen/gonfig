@@ -6,17 +6,25 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"github.com/soyacen/gonfig/format"
 	"github.com/soyacen/gonfig/resource"
 	"google.golang.org/protobuf/types/known/structpb"
 )
+
+func init() {
+	resource.RegisterResource("nacos", Factory{})
+}
 
 var _ resource.Resource = (*Resource)(nil)
 
@@ -188,4 +196,101 @@ func New(client config_client.IConfigClient, group string, dataId string) (*Reso
 		ext:       ext,
 		formatter: formatter,
 	}, nil
+}
+
+// Factory is a factory for creating Nacos configuration resources
+type Factory struct{}
+
+// New creates a new Nacos configuration resource from DSN
+// DSN format: nacos://username:password@ip:port/namespace/group/dataId.ext?param1=value1&param2=value2
+// Parameters:
+//   - ctx: Context for cancellation
+//   - dsn: Data source name
+//
+// Returns:
+//   - resource.Resource: New Nacos resource instance
+//   - error: Any error during initialization
+func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("nacos: parse dsn failed: %w", err)
+	}
+
+	if u.Scheme != "nacos" {
+		return nil, fmt.Errorf("nacos: invalid scheme: %s", u.Scheme)
+	}
+
+	// Extract namespace, group, dataId from path
+	// path: /namespace/group/dataId.ext
+	path := strings.TrimPrefix(u.Path, "/")
+	parts := strings.Split(path, "/")
+
+	var namespace, group, dataId string
+	switch len(parts) {
+	case 2:
+		group = parts[0]
+		dataId = parts[1]
+	case 3:
+		namespace = parts[0]
+		group = parts[1]
+		dataId = parts[2]
+	default:
+		return nil, fmt.Errorf("nacos: invalid dsn path: %s", u.Path)
+	}
+
+	// Extract server config
+	host := u.Hostname()
+	portStr := u.Port()
+	if portStr == "" {
+		portStr = "8848"
+	}
+	port, err := strconv.ParseUint(portStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("nacos: invalid port: %s", portStr)
+	}
+
+	serverConfigs := []constant.ServerConfig{*constant.NewServerConfig(host, port)}
+
+	// Extract client config
+	clientConfig := constant.NewClientConfig()
+	clientConfig.NamespaceId = namespace
+	if u.User != nil {
+		clientConfig.Username = u.User.Username()
+		clientConfig.Password, _ = u.User.Password()
+	}
+
+	// Parse query parameters for additional configurations
+	query := u.Query()
+	if v := query.Get("timeoutMs"); v != "" {
+		if t, err := strconv.ParseUint(v, 10, 64); err == nil {
+			clientConfig.TimeoutMs = t
+		}
+	}
+	if v := query.Get("logDir"); v != "" {
+		clientConfig.LogDir = v
+	}
+	if v := query.Get("cacheDir"); v != "" {
+		clientConfig.CacheDir = v
+	}
+	if v := query.Get("logLevel"); v != "" {
+		clientConfig.LogLevel = v
+	}
+	if v := query.Get("notLoadCacheAtStart"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			clientConfig.NotLoadCacheAtStart = b
+		}
+	}
+	if v := query.Get("appName"); v != "" {
+		clientConfig.AppName = v
+	}
+
+	client, err := clients.NewConfigClient(vo.NacosClientParam{
+		ClientConfig:  clientConfig,
+		ServerConfigs: serverConfigs,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("nacos: create client failed: %w", err)
+	}
+
+	return New(client, group, dataId)
 }

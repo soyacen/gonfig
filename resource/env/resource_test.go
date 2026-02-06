@@ -8,14 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/soyacen/gonfig/format"
-	"github.com/soyacen/gonfig/format/env"
+	_ "github.com/soyacen/gonfig/format/env"
 	"google.golang.org/protobuf/types/known/structpb"
 )
-
-func init() {
-	format.RegisterFormatter("env", env.Env{})
-}
 
 func TestLoad(t *testing.T) {
 	// 创建测试资源
@@ -95,5 +90,64 @@ func TestWatch(t *testing.T) {
 	val := newVal.GetFields()["TEST_KEY"].GetStringValue()
 	if val != "updated" {
 		t.Errorf("expected value 'updated'; got %q", val)
+	}
+}
+
+func TestFactory_New(t *testing.T) {
+	tests := []struct {
+		name         string
+		dsn          string
+		wantPrefix   string
+		wantInterval time.Duration
+		wantErr      bool
+	}{
+		{
+			name:         "simple",
+			dsn:          "env://APP_",
+			wantPrefix:   "APP_",
+			wantInterval: 5 * time.Second,
+			wantErr:      false,
+		},
+		{
+			name:         "with interval",
+			dsn:          "env://APP_?interval=10s",
+			wantPrefix:   "APP_",
+			wantInterval: 10 * time.Second,
+			wantErr:      false,
+		},
+		{
+			name:         "prefix in path",
+			dsn:          "env:///APP_",
+			wantPrefix:   "APP_",
+			wantInterval: 5 * time.Second,
+			wantErr:      false,
+		},
+		{
+			name:    "invalid scheme",
+			dsn:     "file:///tmp/test.yaml",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := Factory{}
+			r, err := f.New(context.Background(), tt.dsn)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Factory.New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+
+			nr := r.(*Resource)
+			if nr.prefix != tt.wantPrefix {
+				t.Errorf("prefix = %v, want %v", nr.prefix, tt.wantPrefix)
+			}
+			if nr.interval != tt.wantInterval {
+				t.Errorf("interval = %v, want %v", nr.interval, tt.wantInterval)
+			}
+		})
 	}
 }

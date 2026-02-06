@@ -18,6 +18,11 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+func init() {
+	resource.Register("file", &Factory{})
+	resource.Register("", &Factory{})
+}
+
 var _ resource.Resource = (*Resource)(nil)
 
 // Resource represents a configuration resource loaded from a file
@@ -205,4 +210,21 @@ func New(filename string) (*Resource, error) {
 		filename:  filename,
 		formatter: formatter,
 	}, nil
+}
+
+// Factory is a factory for creating file-based configuration resources
+type Factory struct{}
+
+// New creates a new file-based configuration resource from DSN
+// DSN format: file:///path/to/file.ext or /path/to/file.ext
+// Parameters:
+//   - ctx: Context for cancellation
+//   - dsn: Data source name (file path)
+//
+// Returns:
+//   - resource.Resource: New file resource instance
+//   - error: Any error during initialization
+func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
+	filename := strings.TrimPrefix(dsn, "file://")
+	return New(filename)
 }

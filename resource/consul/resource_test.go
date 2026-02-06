@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/soyacen/gonfig/format"
-	"github.com/soyacen/gonfig/format/env"
 	"github.com/hashicorp/consul/api"
+	_ "github.com/soyacen/gonfig/format/env"
+	_ "github.com/soyacen/gonfig/format/yaml"
 	_ "golang.org/x/exp/maps"
 	_ "golang.org/x/net/http2"
 	_ "golang.org/x/sys/unix"
@@ -26,7 +26,6 @@ func TestResource_Load_Consul(t *testing.T) {
 		t.Errorf("factory() error = %v", err)
 		return
 	}
-	format.RegisterFormatter("env", env.Env{})
 	key := "consul.env"
 
 	_, err = client.KV().Put(&api.KVPair{
@@ -73,7 +72,6 @@ func TestResource_Watch_Consul(t *testing.T) {
 		t.Errorf("factory() error = %v", err)
 		return
 	}
-	format.RegisterFormatter("env", env.Env{})
 	key := "consul.env"
 
 	_, err = client.KV().Put(&api.KVPair{
@@ -134,5 +132,86 @@ func TestResource_Watch_Consul(t *testing.T) {
 	val := newVal.GetFields()["TEST_KEY"].GetStringValue()
 	if val != "updated" {
 		t.Errorf("expected value 'updated'; got %q", val)
+	}
+}
+
+func TestFactory_New(t *testing.T) {
+	tests := []struct {
+		name     string
+		dsn      string
+		wantKey  string
+		wantDC   string
+		wantPart string
+		wantNS   string
+		wantErr  bool
+	}{
+		{
+			name:    "simple key only",
+			dsn:     "consul://127.0.0.1:8500/test-key.env",
+			wantKey: "test-key.env",
+			wantErr: false,
+		},
+		{
+			name:    "deep key",
+			dsn:     "consul://127.0.0.1:8500/app/config.yaml",
+			wantKey: "app/config.yaml",
+			wantErr: false,
+		},
+		{
+			name:    "datacenter and key",
+			dsn:     "consul://127.0.0.1:8500/test-key.env?datacenter=dc1",
+			wantDC:  "dc1",
+			wantKey: "test-key.env",
+			wantErr: false,
+		},
+		{
+			name:    "dc, ns and key",
+			dsn:     "consul://127.0.0.1:8500/test-key.env?datacenter=dc1&namespace=ns1",
+			wantDC:  "dc1",
+			wantNS:  "ns1",
+			wantKey: "test-key.env",
+			wantErr: false,
+		},
+		{
+			name:     "dc, part, ns and key",
+			dsn:      "consul://127.0.0.1:8500/test-key.env?datacenter=dc1&partition=part1&namespace=ns1",
+			wantDC:   "dc1",
+			wantPart: "part1",
+			wantNS:   "ns1",
+			wantKey:  "test-key.env",
+			wantErr:  false,
+		},
+		{
+			name:    "invalid scheme",
+			dsn:     "http://127.0.0.1:8500/test-key.env",
+			wantErr: true,
+		},
+		{
+			name:    "empty key",
+			dsn:     "consul://127.0.0.1:8500/",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := Factory{}
+			r, err := f.New(context.Background(), tt.dsn)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Factory.New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+
+			res := r.(*Resource)
+			if res.key != tt.wantKey {
+				t.Errorf("key = %v, want %v", res.key, tt.wantKey)
+			}
+			// Since we can't easily access the internal client's config without reflection or adding exported methods,
+			// this test primarily verifies the key parsing which is part of the New call.
+			// However, the Factory.New logic internally uses New(client, key).
+		})
 	}
 }

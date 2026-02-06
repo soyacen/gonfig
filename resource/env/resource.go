@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -18,6 +19,10 @@ import (
 	"github.com/soyacen/gonfig/resource"
 	"google.golang.org/protobuf/types/known/structpb"
 )
+
+func init() {
+	resource.Register("env", &Factory{})
+}
 
 var _ resource.Resource = (*Resource)(nil)
 
@@ -187,4 +192,42 @@ func New(prefix string, interval time.Duration) (*Resource, error) {
 		interval:  interval,
 		formatter: formatter,
 	}, nil
+}
+
+// Factory is a factory for creating environment variable configuration resources
+type Factory struct{}
+
+// New creates a new environment variable configuration resource from DSN
+// DSN format: env://prefix?interval=5s
+// Parameters:
+//   - ctx: Context for cancellation
+//   - dsn: Data source name
+//
+// Returns:
+//   - resource.Resource: New environment variable resource instance
+//   - error: Any error during initialization
+func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("env: parse dsn failed: %w", err)
+	}
+
+	if u.Scheme != "env" {
+		return nil, fmt.Errorf("env: invalid scheme: %s", u.Scheme)
+	}
+
+	// Prefix can be in the hostname or path
+	prefix := u.Host
+	if prefix == "" {
+		prefix = strings.TrimPrefix(u.Path, "/")
+	}
+
+	interval := 5 * time.Second
+	if v := u.Query().Get("interval"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			interval = d
+		}
+	}
+
+	return New(prefix, interval)
 }

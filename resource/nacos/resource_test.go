@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/soyacen/gonfig/format"
-	"github.com/soyacen/gonfig/format/env"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/format/env"
 	_ "golang.org/x/crypto/chacha20"
 	_ "golang.org/x/net/http2"
 	_ "golang.org/x/sync/singleflight"
@@ -165,5 +165,81 @@ func TestResource_Watch_Nacos(t *testing.T) {
 	val := newVal.GetFields()["TEST_KEY"].GetStringValue()
 	if val != "updated" {
 		t.Errorf("expected value 'updated'; got %q", val)
+	}
+}
+
+func TestFactory_New(t *testing.T) {
+	tests := []struct {
+		name      string
+		dsn       string
+		wantNS    string
+		wantGroup string
+		wantData  string
+		wantErr   bool
+	}{
+		{
+			name:      "simple",
+			dsn:       "nacos://127.0.0.1:8848/test-group/test-data.env",
+			wantNS:    "",
+			wantGroup: "test-group",
+			wantData:  "test-data.env",
+			wantErr:   false,
+		},
+		{
+			name:      "with namespace",
+			dsn:       "nacos://127.0.0.1:8848/test-ns/test-group/test-data.env",
+			wantNS:    "test-ns",
+			wantGroup: "test-group",
+			wantData:  "test-data.env",
+			wantErr:   false,
+		},
+		{
+			name:      "with auth",
+			dsn:       "nacos://user:pass@127.0.0.1:8848/test-ns/test-group/test-data.env",
+			wantNS:    "test-ns",
+			wantGroup: "test-group",
+			wantData:  "test-data.env",
+			wantErr:   false,
+		},
+		{
+			name:      "with query",
+			dsn:       "nacos://127.0.0.1:8848/test-ns/test-group/test-data.env?timeoutMs=5000&logLevel=debug",
+			wantNS:    "test-ns",
+			wantGroup: "test-group",
+			wantData:  "test-data.env",
+			wantErr:   false,
+		},
+		{
+			name:    "invalid scheme",
+			dsn:     "http://127.0.0.1:8848/test-ns/test-group/test-data.env",
+			wantErr: true,
+		},
+		{
+			name:    "invalid path",
+			dsn:     "nacos://127.0.0.1:8848/test-data.env",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := Factory{}
+			r, err := f.New(context.Background(), tt.dsn)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Factory.New() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+
+			nr := r.(*Resource)
+			if nr.group != tt.wantGroup {
+				t.Errorf("group = %v, want %v", nr.group, tt.wantGroup)
+			}
+			if nr.dataId != tt.wantData {
+				t.Errorf("dataId = %v, want %v", nr.dataId, tt.wantData)
+			}
+		})
 	}
 }

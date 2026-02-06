@@ -7,19 +7,25 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
-	"github.com/soyacen/gonfig/format"
-	"github.com/soyacen/gonfig/resource"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
 	"github.com/hashicorp/go-hclog"
+	"github.com/soyacen/gonfig/format"
+	"github.com/soyacen/gonfig/resource"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )
+
+func init() {
+	resource.RegisterResource("consul", Factory{})
+}
 
 var _ resource.Resource = (*Resource)(nil)
 
@@ -237,4 +243,71 @@ func New(client *api.Client, key string) (*Resource, error) {
 		key:       key,
 		formatter: formatter,
 	}, nil
+}
+
+// Factory is a factory for creating Consul configuration resources
+type Factory struct{}
+
+// New creates a new Consul configuration resource from DSN
+// DSN format: consul://[token@]ip:port/key.ext?&wait=5s&&partition=p1
+// Parameters:
+//   - ctx: Context for cancellation
+//   - dsn: Data source name
+//
+// Returns:
+//   - resource.Resource: New Consul resource instance
+//   - error: Any error during initialization
+func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("consul: parse dsn failed: %w", err)
+	}
+
+	if u.Scheme != "consul" {
+		return nil, fmt.Errorf("consul: invalid scheme: %s", u.Scheme)
+	}
+
+	// The entire path (without leading /) is treated as the key
+	key := strings.TrimPrefix(u.Path, "/")
+	if key == "" {
+		return nil, fmt.Errorf("consul: key is empty")
+	}
+
+	config := api.DefaultConfig()
+	if u.Host != "" {
+		config.Address = u.Host
+	}
+
+	// Token can be in user info or query param
+	if u.User != nil {
+		config.Token = u.User.Username()
+	}
+
+	query := u.Query()
+	if v := query.Get("token"); v != "" {
+		config.Token = v
+	}
+
+	// Query parameters for Consul configuration
+	if v := query.Get("datacenter"); v != "" {
+		config.Datacenter = v
+	}
+	if v := query.Get("partition"); v != "" {
+		config.Partition = v
+	}
+	if v := query.Get("namespace"); v != "" {
+		config.Namespace = v
+	}
+	if v := query.Get("wait"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			config.WaitTime = d
+		}
+	}
+
+	client, err := api.NewClient(config)
+	if err != nil {
+		return nil, fmt.Errorf("consul: create client failed: %w", err)
+	}
+
+	return New(client, key)
 }

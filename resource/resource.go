@@ -3,9 +3,29 @@ package resource
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )
+
+// ... (other types)
+
+// New creates a new resource based on the provided DSN.
+// It parses the DSN to determine the scheme and uses the registered factory to create the resource.
+func New(ctx context.Context, dsn string) (Resource, error) {
+	scheme := ""
+	if i := strings.Index(dsn, "://"); i != -1 {
+		scheme = dsn[:i]
+	}
+
+	factory, ok := GetResource(scheme)
+	if !ok {
+		return nil, fmt.Errorf("gonfig: unknown resource scheme: %s", scheme)
+	}
+
+	return factory.New(ctx, dsn)
+}
 
 // NotifyFunc defines the function type for notification callbacks.
 // The value parameter is a pointer to structpb.Struct.
@@ -41,4 +61,12 @@ type Resource interface {
 	//     takes context for graceful shutdown, returns any cleanup error
 	//   - error: Immediate error if watch setup fails
 	Watch(ctx context.Context, notifyFunc NotifyFunc, errFunc ErrFunc) (StopFunc, error)
+}
+
+// Factory defines the interface for creating configuration resources.
+// Implementations should handle the creation of configuration resources
+// based on the provided DSN (Data Source Name).
+type Factory interface {
+	// Name returns the name of the factory.
+	New(ctx context.Context, dsn string) (Resource, error)
 }

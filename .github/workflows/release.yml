@@ -76,7 +76,8 @@ jobs:
           git push origin resource/nacos/$VERSION
           git tag ${{ env.VERSION }}
           git push origin ${{ env.VERSION }}
-          echo "Tag ${{ env.VERSION }} created and pushed successfully"
+          echo "Tag ${{ env.V
+          ERSION }} created and pushed successfully"
           
       - name: Create GitHub Release
         id: create_release
