@@ -136,11 +136,28 @@ resource, err := consul.New(client, "config/key")
 
 ### 4. Nacos
 
+支持通过 DSN 方式创建 Nacos 配置资源：
+
 ```go
 import "github.com/soyacen/gonfig/resource/nacos"
 
+// 使用 DSN 创建资源
+// 格式：nacos://username:password@ip:port/dataId.ext?namespace=ns&group=g&param1=value1
+factory := nacos.Factory{}
+resource, err := factory.New(context.Background(), "nacos://admin:nacos@127.0.0.1:8848/config.yaml?namespace=test&group=MY_GROUP")
+
+// 或者使用传统方式
 resource, err := nacos.New(client, "group", "dataId")
 ```
+
+#### Nacos DSN 参数说明：
+
+- `username:password` - 可选的认证信息
+- `ip:port` - Nacos 服务器地址和端口（默认端口 8848）
+- `dataId.ext` - 配置的数据ID和文件扩展名（必填）
+- `namespace` - 命名空间（可选，默认为 "public"）
+- `group` - 配置分组（可选，默认为 "DEFAULT_GROUP"）
+- 其他参数如 `timeoutMs`、`logDir`、`cacheDir` 等也可通过 query 参数传递
 
 ## 支持的配置格式
 

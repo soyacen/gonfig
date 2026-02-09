@@ -202,7 +202,7 @@ func New(client config_client.IConfigClient, group string, dataId string) (*Reso
 type Factory struct{}
 
 // New creates a new Nacos configuration resource from DSN
-// DSN format: nacos://username:password@ip:port/namespace/group/dataId.ext?param1=value1&param2=value2
+// DSN format: nacos://username:password@ip:port/dataId.ext?namespace=ns&group=g&param1=value1&param2=value2
 // Parameters:
 //   - ctx: Context for cancellation
 //   - dsn: Data source name
@@ -220,22 +220,25 @@ func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 		return nil, fmt.Errorf("nacos: invalid scheme: %s", u.Scheme)
 	}
 
-	// Extract namespace, group, dataId from path
-	// path: /namespace/group/dataId.ext
+	// Extract dataId from path
+	// path: /dataId.ext
 	path := strings.TrimPrefix(u.Path, "/")
-	parts := strings.Split(path, "/")
+	if path == "" {
+		return nil, fmt.Errorf("nacos: dataId is required in path")
+	}
+	dataId := path
 
-	var namespace, group, dataId string
-	switch len(parts) {
-	case 2:
-		group = parts[0]
-		dataId = parts[1]
-	case 3:
-		namespace = parts[0]
-		group = parts[1]
-		dataId = parts[2]
-	default:
-		return nil, fmt.Errorf("nacos: invalid dsn path: %s", u.Path)
+	// Extract namespace and group from query parameters
+	query := u.Query()
+	namespace := query.Get("namespace")
+	group := query.Get("group")
+
+	// Set default values if not provided
+	if namespace == "" {
+		namespace = "public"
+	}
+	if group == "" {
+		group = "DEFAULT_GROUP"
 	}
 
 	// Extract server config
@@ -260,7 +263,6 @@ func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 	}
 
 	// Parse query parameters for additional configurations
-	query := u.Query()
 	if v := query.Get("timeoutMs"); v != "" {
 		if t, err := strconv.ParseUint(v, 10, 64); err == nil {
 			clientConfig.TimeoutMs = t
