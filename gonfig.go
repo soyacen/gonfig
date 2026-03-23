@@ -70,7 +70,10 @@ func convert[Config proto.Message](value *structpb.Struct) (Config, error) {
 		return config, err
 	}
 	config = config.ProtoReflect().Type().New().Interface().(Config)
-	if err := protojson.Unmarshal(data, config); err != nil {
+	unmarshalOptions := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+	if unmarshalOptions.Unmarshal(data, config) != nil {
 		return config, err
 	}
 	return config, nil
