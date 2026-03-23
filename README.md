@@ -20,7 +20,7 @@ go get github.com/soyacen/gonfig@latest
 ## 安装 protoc-gen-gonfig 插件
 
 ```bash
-go get github.com/soyacen/gonfig/cmd/protoc-gen-gonfig@latest
+go install github.com/soyacen/gonfig/cmd/protoc-gen-gonfig@latest
 ```
 
 ## 快速开始
