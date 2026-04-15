@@ -285,6 +285,16 @@ func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 	if v := query.Get("appName"); v != "" {
 		clientConfig.AppName = v
 	}
+	if v := query.Get("logDir"); v != "" {
+		clientConfig.LogDir = v
+	} else {
+		clientConfig.LogDir = "/tmp/nacos/log"
+	}
+	if v := query.Get("cacheDir"); v != "" {
+		clientConfig.CacheDir = v
+	} else {
+		clientConfig.CacheDir = "/tmp/nacos/cache"
+	}
 
 	client, err := clients.NewConfigClient(vo.NacosClientParam{
 		ClientConfig:  clientConfig,
