@@ -1,4 +1,4 @@
-// Package nacos provides Nacos-based implementation of the configuration resource interface
+// Package nacos provides a resource.Resource implementation backed by Nacos.
 package nacos
 
 import (
@@ -28,30 +28,17 @@ func init() {
 
 var _ resource.Resource = (*Resource)(nil)
 
-// Resource represents a configuration resource in Nacos server
+// Resource is a configuration source backed by Nacos.
 type Resource struct {
-	// client Nacos config client
-	client config_client.IConfigClient
-	// group Configuration group in Nacos
-	group string
-	// dataId Configuration data ID in Nacos
-	dataId string
-	// extension of the configuration
-	ext string
-	// formatter for parsing configuration
+	client    config_client.IConfigClient
+	group     string
+	dataId    string
+	ext       string
 	formatter format.Formatter
-	// pre atomic storage for configuration pre
-	pre atomic.Value
+	pre       atomic.Value
 }
 
-// Load retrieves configuration from Nacos server and parses it into structpb.Struct
-// It fetches the value at the configured group and dataId path and uses the formatter to parse it
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - *structpb.Struct: Parsed configuration data
-//   - error: Any error that occurred during loading or parsing
+// Load fetches the configuration from Nacos and parses it into a protobuf Struct.
 func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	data, err := r.load(ctx)
 	if err != nil {
@@ -65,13 +52,7 @@ func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	return parsed, nil
 }
 
-// load is an internal helper function to fetch raw data from Nacos server
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - []byte: Raw configuration data from Nacos
-//   - error: Any error that occurred while fetching from Nacos
+// load fetches raw configuration content from Nacos.
 func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	content, err := r.client.GetConfig(vo.ConfigParam{Group: r.group, DataId: r.dataId})
 	if err != nil {
@@ -80,16 +61,8 @@ func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	return []byte(content), nil
 }
 
-// Watch sets up a watcher for configuration changes in Nacos
-// It registers a listener that monitors changes to the specific group and dataId and notifies subscribers
-// Parameters:
-//   - ctx: Context for cancellation
-//   - notifyFunc: Callback function for configuration updates
-//   - errFunc: Callback function for error reporting
-//
-// Returns:
-//   - resource.StopFunc: Function to stop watching
-//   - error: Any immediate error during setup
+// Watch registers a Nacos listener for the configured group and dataId and
+// invokes notifyFunc when the configuration changes.
 func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, errFunc resource.ErrFunc) (resource.StopFunc, error) {
 	// Validate notify function
 	if notifyFunc == nil {
@@ -165,16 +138,7 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 	return stop, nil
 }
 
-// New creates a new Nacos configuration resource
-// It validates the dataId extension and finds an appropriate formatter
-// Parameters:
-//   - client: Nacos config client
-//   - group: Configuration group in Nacos
-//   - dataId: Configuration data ID in Nacos
-//
-// Returns:
-//   - *Resource: New Nacos resource instance
-//   - error: Any error during initialization
+// New creates a Nacos Resource for the given client, group, and dataId.
 func New(client config_client.IConfigClient, group string, dataId string) (*Resource, error) {
 	// Extract dataId extension
 	ext := strings.TrimPrefix(filepath.Ext(dataId), ".")
@@ -198,18 +162,11 @@ func New(client config_client.IConfigClient, group string, dataId string) (*Reso
 	}, nil
 }
 
-// Factory is a factory for creating Nacos configuration resources
+// Factory creates nacos Resources from DSN strings.
+// DSN format: nacos://username:password@ip:port/dataId.ext?namespace=ns&group=g
 type Factory struct{}
 
-// New creates a new Nacos configuration resource from DSN
-// DSN format: nacos://username:password@ip:port/dataId.ext?namespace=ns&group=g&param1=value1&param2=value2
-// Parameters:
-//   - ctx: Context for cancellation
-//   - dsn: Data source name
-//
-// Returns:
-//   - resource.Resource: New Nacos resource instance
-//   - error: Any error during initialization
+// New creates a Resource from the given DSN.
 func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {

@@ -1,3 +1,5 @@
+// Command protoc-gen-gonfig is a protoc plugin that generates helper code for
+// protobuf messages named Config, Conf, or Configuration.
 package main
 
 import (
@@ -11,6 +13,7 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
+// Version is the current version of the protoc-gen-gonfig plugin.
 var Version = "v0.0.15"
 
 func main() {

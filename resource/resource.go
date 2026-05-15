@@ -1,4 +1,5 @@
-// Package resource defines the core interface and types for configuration resources.
+// Package resource defines the core Resource and Factory interfaces for
+// configuration providers, along with callback types for change notifications.
 package resource
 
 import (
@@ -7,46 +8,30 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-// NotifyFunc defines the function type for notification callbacks.
-// The value parameter is a pointer to structpb.Struct.
+// NotifyFunc is called when a watched configuration changes.
 type NotifyFunc func(value *structpb.Struct)
 
-// ErrFunc defines the function type for error handling callbacks.
+// ErrFunc is called when an error occurs during watching.
 type ErrFunc func(err error)
 
-// StopFunc defines the function type for stopping monitoring and cleanup.
-// It accepts a context for graceful shutdown and returns any cleanup error.
+// StopFunc stops watching and performs cleanup. It accepts a context for
+// graceful shutdown and returns any cleanup error.
 type StopFunc func(context.Context) error
 
-// Resource defines the core interface for configuration resource providers.
-// Implementations should handle both synchronous loading and change monitoring
-// of configuration data.
+// Resource is a configuration source that can load data synchronously and
+// watch for changes.
 type Resource interface {
-	// Load retrieves the current configuration state.
-	// Args:
-	//   - ctx: Context for cancellation and timeouts
-	// Returns:
-	//   - *structpb.Struct: Current configuration data in protobuf Struct format
-	//   - error: Loading error if any
-
+	// Load retrieves the current configuration.
 	Load(ctx context.Context) (*structpb.Struct, error)
 
-	// Watch establishes a continuous monitoring of configuration changes.
-	// Args:
-	//   - ctx: Context for cancellation
-	//   - notifyFunc: Function for receiving configuration updates
-	//   - errFunc: Function for receiving monitoring errors
-	// Returns:
-	//   - func(context.Context) error: Cleanup function that stops watching,
-	//     takes context for graceful shutdown, returns any cleanup error
-	//   - error: Immediate error if watch setup fails
+	// Watch monitors the configuration for changes and invokes notifyFunc on
+	// each update. errFunc receives errors that occur during monitoring.
+	// Returns a stop function to cancel watching.
 	Watch(ctx context.Context, notifyFunc NotifyFunc, errFunc ErrFunc) (StopFunc, error)
 }
 
-// Factory defines the interface for creating configuration resources.
-// Implementations should handle the creation of configuration resources
-// based on the provided DSN (Data Source Name).
+// Factory creates Resource instances from a DSN string.
 type Factory interface {
-	// Name returns the name of the factory.
+	// New creates a new Resource from the given DSN.
 	New(ctx context.Context, dsn string) (Resource, error)
 }

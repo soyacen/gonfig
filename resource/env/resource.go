@@ -26,27 +26,16 @@ func init() {
 
 var _ resource.Resource = (*Resource)(nil)
 
-// Resource represents a configuration resource loaded from environment variables
+// Resource is a configuration source backed by environment variables.
 type Resource struct {
-	// prefix is used to filter environment variables (only variables with this prefix are considered)
-	prefix string
-	// interval defines how often to check for environment variable changes
-	interval time.Duration
-	// formatter is used for parsing environment variables into structured data
+	prefix    string
+	interval  time.Duration
 	formatter format.Formatter
-	// pre is atomic storage for previous configuration data to detect changes
-	pre atomic.Value
+	pre       atomic.Value
 }
 
-// Load retrieves and parses environment variables with the specified prefix
-// It collects all environment variables that start with the configured prefix,
-// sorts them for consistency, and uses the formatter to convert them to structpb.Struct format
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - *structpb.Struct: Parsed configuration data
-//   - error: Any error that occurred during loading or parsing
+// Load collects environment variables matching the configured prefix, sorts
+// them, and parses them into a protobuf Struct.
 func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	data, err := r.load(ctx)
 	if err != nil {
@@ -60,15 +49,8 @@ func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	return parsed, nil
 }
 
-// load collects and prepares environment variables data
-// It filters environment variables by the configured prefix, sorts them,
-// and joins them with newlines to create a consistent representation
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - []byte: Formatted environment variables data
-//   - error: Error if no environment variables found with the prefix
+// load filters environment variables by prefix, sorts them, and joins them
+// into a single byte slice.
 func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	var environs [][]byte
 	// Filter environment variables by prefix
@@ -85,17 +67,8 @@ func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	return bytes.Join(environs, []byte("\n")), nil
 }
 
-// Watch monitors environment variables for changes at regular intervals
-// It periodically checks for changes in environment variables with the specified prefix
-// and notifies subscribers when changes are detected
-// Parameters:
-//   - ctx: Context for cancellation
-//   - notifyFunc: Callback function for configuration updates
-//   - errFunc: Callback function for error reporting
-//
-// Returns:
-//   - resource.StopFunc: Function to stop watching
-//   - error: Any immediate error during setup
+// Watch polls environment variables at the configured interval and invokes
+// notifyFunc when changes are detected.
 func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, errFunc resource.ErrFunc) (resource.StopFunc, error) {
 	// Validate notify function
 	if notifyFunc == nil {
@@ -164,15 +137,8 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 	return stop, nil
 }
 
-// New creates a new environment variable configuration resource
-// It sets up a resource that will monitor environment variables with the given prefix
-// Parameters:
-//   - prefix: The prefix used to filter environment variables (e.g., "APP_")
-//   - interval: How often to check for changes (minimum 1 second)
-//
-// Returns:
-//   - *Resource: New environment variable resource instance
-//   - error: Any error during initialization
+// New creates a Resource that monitors environment variables matching prefix.
+// Interval controls the polling frequency; values <= 0 default to 5 seconds.
 func New(prefix string, interval time.Duration) (*Resource, error) {
 	ext := "env"
 	// Find appropriate formatter for environment variables
@@ -194,18 +160,11 @@ func New(prefix string, interval time.Duration) (*Resource, error) {
 	}, nil
 }
 
-// Factory is a factory for creating environment variable configuration resources
+// Factory creates env Resources from DSN strings.
+// DSN format: env://prefix?interval=5s
 type Factory struct{}
 
-// New creates a new environment variable configuration resource from DSN
-// DSN format: env://prefix?interval=5s
-// Parameters:
-//   - ctx: Context for cancellation
-//   - dsn: Data source name
-//
-// Returns:
-//   - resource.Resource: New environment variable resource instance
-//   - error: Any error during initialization
+// New creates a Resource from the given DSN.
 func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {

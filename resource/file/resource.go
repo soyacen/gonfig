@@ -1,4 +1,5 @@
-// Package file provides file-based implementation of the configuration resource interface
+// Package file provides a resource.Resource implementation that loads
+// configuration from local files and watches them for changes.
 package file
 
 import (
@@ -25,24 +26,14 @@ func init() {
 
 var _ resource.Resource = (*Resource)(nil)
 
-// Resource represents a configuration resource loaded from a file
+// Resource is a configuration source backed by a local file.
 type Resource struct {
-	// filename is the path to the configuration file
-	filename string
-	// formatter is used for parsing file content into structured data
+	filename  string
 	formatter format.Formatter
-	// pre is atomic storage for previous configuration data to detect changes
-	pre atomic.Value
+	pre       atomic.Value
 }
 
-// Load reads and parses the configuration file
-// It loads the file content and uses the formatter to convert it to structpb.Struct format
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - *structpb.Struct: Parsed configuration data
-//   - error: Any error that occurred during loading or parsing
+// Load reads the configuration file and parses it into a protobuf Struct.
 func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	data, err := r.load(ctx)
 	if err != nil {
@@ -56,27 +47,13 @@ func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	return parsed, nil
 }
 
-// load is an internal helper function to read raw file content
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - []byte: Raw file content
-//   - error: Any error that occurred while reading the file
+// load reads the raw file content.
 func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	return os.ReadFile(r.filename)
 }
 
-// Watch monitors the file for changes and notifies subscribers when updates occur
-// It uses fsnotify to watch for filesystem events and filters for relevant changes
-// Parameters:
-//   - ctx: Context for cancellation
-//   - notifyFunc: Callback function for configuration updates
-//   - errFunc: Callback function for error reporting
-//
-// Returns:
-//   - resource.StopFunc: Function to stop watching
-//   - error: Any immediate error during setup
+// Watch monitors the file for changes using fsnotify and invokes notifyFunc
+// when the content changes.
 func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, errFunc resource.ErrFunc) (resource.StopFunc, error) {
 	// Validate notify function
 	if notifyFunc == nil {
@@ -184,14 +161,7 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 	return stop, nil
 }
 
-// New creates a new file-based configuration resource
-// It validates the file extension and finds an appropriate formatter
-// Parameters:
-//   - filename: Path to the configuration file
-//
-// Returns:
-//   - *Resource: New file resource instance
-//   - error: Any error during initialization
+// New creates a file Resource for the given filename.
 func New(filename string) (*Resource, error) {
 	// Extract file extension
 	ext := strings.TrimPrefix(filepath.Ext(filename), ".")
@@ -212,18 +182,11 @@ func New(filename string) (*Resource, error) {
 	}, nil
 }
 
-// Factory is a factory for creating file-based configuration resources
+// Factory creates file Resources from DSN strings.
+// DSN format: file:///path/to/file.ext or /path/to/file.ext
 type Factory struct{}
 
-// New creates a new file-based configuration resource from DSN
-// DSN format: file:///path/to/file.ext or /path/to/file.ext
-// Parameters:
-//   - ctx: Context for cancellation
-//   - dsn: Data source name (file path)
-//
-// Returns:
-//   - resource.Resource: New file resource instance
-//   - error: Any error during initialization
+// New creates a Resource from the given DSN.
 func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 	filename := strings.TrimPrefix(dsn, "file://")
 	return New(filename)

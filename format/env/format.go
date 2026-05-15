@@ -1,3 +1,5 @@
+// Package env provides a format.Formatter implementation for environment
+// variable files (KEY=VALUE pairs).
 package env
 
 import (
@@ -11,19 +13,11 @@ func init() {
 	format.RegisterFormatter("env", Env{})
 }
 
-// Env implements the Formatter interface for environment variables format.
+// Env is a Formatter that parses environment variable files.
 type Env struct{}
 
-// Parse converts environment variables format data into a protobuf Struct.
-// The input data is expected to be a sequence of KEY=VALUE lines separated by newlines.
-//
-// Args:
-//
-//	data ([]byte) - Raw byte slice containing key-value pairs in KEY=VALUE format
-//
-// Returns:
-// - *structpb.Struct: Parsed structured data with string values
-// - error: Error if parsing fails
+// Parse parses environment variable data into a protobuf Struct.
+// The input is expected to be KEY=VALUE lines separated by newlines.
 func (Env) Parse(data []byte) (*structpb.Struct, error) {
 	m, err := godotenv.UnmarshalBytes(data)
 	if err != nil {

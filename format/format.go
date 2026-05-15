@@ -4,15 +4,8 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-// Formatter interface defines the standard method for parsing configuration data
+// Formatter parses raw configuration bytes into a protobuf Struct.
 type Formatter interface {
-	// Parse converts byte data into a protobuf Struct object
-	//
-	// Args:
-	//   data ([]byte): Raw configuration data
-	//
-	// Returns:
-	//   *structpb.Struct: Parsed structured data
-	//   error: Error if parsing fails
+	// Parse converts raw configuration data into a protobuf Struct.
 	Parse(data []byte) (*structpb.Struct, error)
 }

@@ -1,3 +1,4 @@
+// Package yaml provides a format.Formatter implementation for YAML content.
 package yaml
 
 import (
@@ -12,19 +13,10 @@ func init() {
 	format.RegisterFormatter("yml", Yaml{})
 }
 
-// Yaml implements the Formatter interface for environment variables format.
+// Yaml is a Formatter that parses YAML data.
 type Yaml struct{}
 
-// Parse converts YAML-formatted byte data into a Protocol Buffer Struct object.
-//
-// Args:
-//
-//	data ([]byte): The YAML-formatted byte slice to be parsed
-//
-// Returns:
-//
-//	*structpb.Struct: A protobuf Struct object representing the parsed data
-//	error: An error if parsing fails (e.g., invalid YAML format or type conversion issues)
+// Parse parses YAML data into a protobuf Struct.
 func (Yaml) Parse(data []byte) (*structpb.Struct, error) {
 	v := make(map[string]any)
 	if err := yaml.Unmarshal(data, &v); err != nil {

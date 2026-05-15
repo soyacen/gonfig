@@ -5,20 +5,13 @@ import (
 	"sync"
 )
 
-// Global formatters registry mapping file extensions to their corresponding parsers
 var (
-	// formatters stores registered format parsers
 	formatters = make(map[string]Formatter)
-	// mutex to protect concurrent access to formatters
-	mutex sync.RWMutex
+	mutex      sync.RWMutex
 )
 
-// RegisterFormatter associates a file extension with a configuration parser
-//
-// Args:
-//
-//	ext (string): File extension (e.g., "yaml", "toml")
-//	formatter (Formatter): Implementation of the Formatter interface
+// RegisterFormatter registers a Formatter for the given file extension. It
+// panics if formatter is nil or if an extension is registered twice.
 func RegisterFormatter(ext string, formatter Formatter) {
 	if formatter == nil {
 		panic("gonfig: RegisterFormatter formatter is nil")
@@ -32,15 +25,8 @@ func RegisterFormatter(ext string, formatter Formatter) {
 	formatters[ext] = formatter
 }
 
-// GetFormatter retrieves the parser associated with a specific file extension
-//
-// Args:
-//
-//	ext (string): File extension to look up
-//
-// Returns:
-//
-//	Formatter: Registered parser or nil if not found
+// GetFormatter returns the Formatter registered for the given file extension
+// and a boolean indicating whether a formatter was found.
 func GetFormatter(ext string) (Formatter, bool) {
 	ext = strings.ToLower(ext)
 	mutex.RLock()

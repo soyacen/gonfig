@@ -1,4 +1,4 @@
-// Package consul provides Consul KV store-based implementation of the configuration resource interface
+// Package consul provides a resource.Resource implementation backed by Consul KV.
 package consul
 
 import (
@@ -29,26 +29,16 @@ func init() {
 
 var _ resource.Resource = (*Resource)(nil)
 
-// Resource represents a configuration resource stored in Consul KV store
+// Resource is a configuration source backed by Consul KV.
 type Resource struct {
-	// client is the Consul API client used to interact with the Consul server
-	client *api.Client
-	// key is the path to the configuration in the Consul KV store
-	key string
-	// formatter is used for parsing config data into structured format
+	client    *api.Client
+	key       string
 	formatter format.Formatter
-	// pre is atomic storage for previous configuration data to detect changes
-	pre atomic.Value
+	pre       atomic.Value
 }
 
-// Load retrieves and parses the configuration from Consul KV store
-// It fetches the value at the configured key path and uses the formatter to parse it
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - *structpb.Struct: Parsed configuration data
-//   - error: Any error that occurred during loading or parsing
+// Load fetches the configuration value from Consul KV and parses it into a
+// protobuf Struct.
 func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	data, err := r.load(ctx)
 	if err != nil {
@@ -62,13 +52,7 @@ func (r *Resource) Load(ctx context.Context) (*structpb.Struct, error) {
 	return parsed, nil
 }
 
-// load is an internal helper function to fetch raw data from Consul KV store
-// Parameters:
-//   - ctx: Context for cancellation and timeouts
-//
-// Returns:
-//   - []byte: Raw configuration data from Consul
-//   - error: Any error that occurred while fetching from Consul
+// load fetches raw data from Consul KV.
 func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	pair, _, err := r.client.KV().Get(r.key, new(api.QueryOptions).WithContext(ctx))
 	if err != nil {
@@ -80,16 +64,8 @@ func (r *Resource) load(ctx context.Context) ([]byte, error) {
 	return pair.Value, nil
 }
 
-// Watch sets up a watcher for configuration changes in Consul using Consul's watch mechanism
-// It creates a watch plan that monitors changes to the specific key and notifies subscribers
-// Parameters:
-//   - ctx: Context for cancellation
-//   - notifyFunc: Callback function for configuration updates
-//   - errFunc: Callback function for error reporting
-//
-// Returns:
-//   - resource.StopFunc: Function to stop watching
-//   - error: Any immediate error during setup
+// Watch monitors the Consul KV key for changes using Consul's watch plan and
+// invokes notifyFunc when the value changes.
 func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, errFunc resource.ErrFunc) (resource.StopFunc, error) {
 	// Validate notify function
 	if notifyFunc == nil {
@@ -199,14 +175,13 @@ func (r *Resource) Watch(ctx context.Context, notifyFunc resource.NotifyFunc, er
 	return stop, nil
 }
 
-// consulLogger is a custom logger that forwards errors to the error function
+// consulLogger forwards hclog errors to the configured errFunc.
 type consulLogger struct {
 	hclog.Logger
 	errFunc resource.ErrFunc
 }
 
-// Error implements the hclog.Logger interface and forwards errors to errFunc
-// It formats the error message and arguments into a single error and passes it to errFunc
+// Error implements hclog.Logger by forwarding the formatted message to errFunc.
 func (l *consulLogger) Error(msg string, args ...interface{}) {
 	buf := bytes.NewBufferString(msg)
 	for i := 0; i < len(args); i += 2 {
@@ -215,15 +190,7 @@ func (l *consulLogger) Error(msg string, args ...interface{}) {
 	l.errFunc(errors.New(buf.String()))
 }
 
-// New creates a new Consul configuration resource
-// It validates the key extension and finds an appropriate formatter
-// Parameters:
-//   - client: Consul API client
-//   - key: Path to the configuration in Consul KV store
-//
-// Returns:
-//   - *Resource: New Consul resource instance
-//   - error: Any error during initialization
+// New creates a Consul Resource for the given client and KV key.
 func New(client *api.Client, key string) (*Resource, error) {
 	// Extract key extension
 	ext := strings.TrimPrefix(filepath.Ext(key), ".")
@@ -245,18 +212,11 @@ func New(client *api.Client, key string) (*Resource, error) {
 	}, nil
 }
 
-// Factory is a factory for creating Consul configuration resources
+// Factory creates consul Resources from DSN strings.
+// DSN format: consul://[token@]ip:port/key.ext?wait=5s&partition=p1
 type Factory struct{}
 
-// New creates a new Consul configuration resource from DSN
-// DSN format: consul://[token@]ip:port/key.ext?&wait=5s&&partition=p1
-// Parameters:
-//   - ctx: Context for cancellation
-//   - dsn: Data source name
-//
-// Returns:
-//   - resource.Resource: New Consul resource instance
-//   - error: Any error during initialization
+// New creates a Resource from the given DSN.
 func (Factory) New(ctx context.Context, dsn string) (resource.Resource, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {

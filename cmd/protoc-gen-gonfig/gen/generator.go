@@ -1,3 +1,4 @@
+// Package config implements the code generator for the protoc-gen-gonfig plugin.
 package config
 
 import (
@@ -7,15 +8,21 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+// Generator generates Go helper code for protobuf messages named Config, Conf,
+// or Configuration. It writes LoadConfig, WatchConfig, GetConfig, and per-field
+// getter functions into a generated file.
 type Generator struct {
 	Plugin *protogen.Plugin
 	File   *protogen.File
 }
 
+// NewGenerator creates a new Generator for the given protoc plugin and file.
 func NewGenerator(plugin *protogen.Plugin, file *protogen.File) *Generator {
 	return &Generator{Plugin: plugin, File: file}
 }
 
+// Generate writes the generated _gonfig.pb.go file containing helper functions
+// for all enabled messages in the file.
 func (f *Generator) Generate() error {
 	filename := f.File.GeneratedFilenamePrefix + "_gonfig.pb.go"
 	g := f.Plugin.NewGeneratedFile(filename, f.File.GoImportPath)
@@ -69,7 +76,7 @@ func (f *Generator) Generate() error {
 				return fmt.Errorf("gonfig: oneof field %s is not supported", field.GoName)
 			default:
 				g.P("func Get", field.GoName, "() ", goType, " {")
-				g.P("return ", Clone, "(", f.GlobalConfig(message), ".Load().(*", message.GoIdent, ").Get",field.GoName,"()).(", goType, ")")
+				g.P("return ", Clone, "(", f.GlobalConfig(message), ".Load().(*", message.GoIdent, ").Get", field.GoName, "()).(", goType, ")")
 				g.P("}")
 			}
 			g.P()
@@ -78,41 +85,52 @@ func (f *Generator) Generate() error {
 	return nil
 }
 
+// GetField returns the getter function name for the given field.
 func (f *Generator) GetField(field *protogen.Field) string {
 	return "Get" + field.GoName
 }
 
+// Config returns the Go identifier name of the message.
 func (f *Generator) Config(message *protogen.Message) string {
 	return message.GoIdent.GoName
 }
 
+// GlobalConfig returns the name of the global atomic variable that stores the
+// configuration instance for the message.
 func (f *Generator) GlobalConfig(message *protogen.Message) string {
 	return "_" + f.Config(message)
 }
 
+// GetConfig returns the name of the generated GetConfig helper function.
 func (f *Generator) GetConfig(message *protogen.Message) string {
 	return "Get" + f.Config(message)
 }
 
+// SetConfig returns the name of the generated SetConfig helper function.
 func (f *Generator) SetConfig(message *protogen.Message) string {
 	return "Set" + f.Config(message)
 }
 
+// LoadConfig returns the name of the generated LoadConfig helper function.
 func (f *Generator) LoadConfig(message *protogen.Message) string {
 	return "Load" + f.Config(message)
 }
 
+// WatchConfig returns the name of the generated WatchConfig helper function.
 func (f *Generator) WatchConfig(message *protogen.Message) string {
 	return "Watch" + f.Config(message)
 }
 
+// LoadAndWatchConfig returns the name of the generated LoadAndWatchConfig helper function.
 func (f *Generator) LoadAndWatchConfig(message *protogen.Message) string {
 	return "LoadAndWatch" + f.Config(message)
 }
 
-// message 名为 Config\Conf\Configuration
+// messageName lists the message names that trigger code generation.
 var messageName = []string{"Config", "Conf", "Configuration"}
 
+// EnabledMessage returns the messages in the file whose Go name matches one of
+// the known configuration message names.
 func (f *Generator) EnabledMessage() []*protogen.Message {
 	var messages []*protogen.Message
 	for _, message := range f.File.Messages {

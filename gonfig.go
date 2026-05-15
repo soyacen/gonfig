@@ -1,3 +1,6 @@
+// Package gonfig provides a generic configuration loading system that resolves
+// configuration from various sources via DSN strings and unmarshals them into
+// protobuf messages.
 package gonfig
 
 import (
@@ -12,6 +15,9 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// Load retrieves configuration from the given DSN and unmarshals it into a
+// protobuf message of type Config. The DSN scheme determines which resource
+// provider is used (e.g., file, env, consul, nacos).
 func Load[Config proto.Message](ctx context.Context, dsn string) (Config, error) {
 	var config Config
 	u, err := url.Parse(dsn)
@@ -33,6 +39,9 @@ func Load[Config proto.Message](ctx context.Context, dsn string) (Config, error)
 	return convert[Config](value)
 }
 
+// Watch monitors the configuration source identified by dsn for changes and
+// invokes notifyFunc with the updated configuration. errFunc receives errors
+// that occur during monitoring. Returns a stop function to cancel watching.
 func Watch[Config proto.Message](ctx context.Context, dsn string, notifyFunc func(conf Config), errFunc resource.ErrFunc) (resource.StopFunc, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {

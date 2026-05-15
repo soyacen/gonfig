@@ -1,3 +1,4 @@
+// Package toml provides a format.Formatter implementation for TOML content.
 package toml
 
 import (
@@ -11,19 +12,10 @@ func init() {
 	format.RegisterFormatter("toml", Toml{})
 }
 
-// Toml implements the Formatter interface for environment variables format.
+// Toml is a Formatter that parses TOML data.
 type Toml struct{}
 
-// Parse converts TOML-formatted byte data into a Protocol Buffer Struct object.
-//
-// Args:
-//
-//	data ([]byte): The TOML-formatted byte slice to be parsed
-//
-// Returns:
-//
-//	*structpb.Struct: A protobuf Struct object representing the parsed data
-//	error: An error if parsing fails (e.g., invalid TOML format or type conversion issues)
+// Parse parses TOML data into a protobuf Struct.
 func (Toml) Parse(data []byte) (*structpb.Struct, error) {
 	v := make(map[string]any)
 	if err := toml.Unmarshal(data, &v); err != nil {
