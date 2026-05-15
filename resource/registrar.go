@@ -13,13 +13,13 @@ var resources = make(map[string]Factory)
 // factory is nil or if a factory has already been registered for the name.
 func Register(name string, resource Factory) {
 	if resource == nil {
-		panic("gonfig: RegisterResource resource is nil")
+		panic("gonfig: Register resource is nil")
 	}
 	name = strings.ToLower(name)
 	resourceMu.Lock()
 	defer resourceMu.Unlock()
 	if _, dup := resources[name]; dup {
-		panic("gonfig: RegisterResource called twice for resource " + name)
+		panic("gonfig: Register called twice for resource " + name)
 	}
 	resources[name] = resource
 }

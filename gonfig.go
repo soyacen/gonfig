@@ -5,7 +5,6 @@ package gonfig
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 
@@ -26,7 +25,7 @@ func Load[Config proto.Message](ctx context.Context, dsn string) (Config, error)
 	}
 	factory, ok := resource.Get(u.Scheme)
 	if !ok {
-		return config, errors.New("gonfig: resource factory not found for dsn " + dsn)
+		return config, fmt.Errorf("gonfig: resource factory not found for scheme %q", u.Scheme)
 	}
 	resource, err := factory.New(ctx, dsn)
 	if err != nil {
@@ -49,7 +48,7 @@ func Watch[Config proto.Message](ctx context.Context, dsn string, notifyFunc fun
 	}
 	factory, ok := resource.Get(u.Scheme)
 	if !ok {
-		return nil, errors.New("gonfig: resource factory not found for dsn " + dsn)
+		return nil, fmt.Errorf("gonfig: resource factory not found for scheme %q", u.Scheme)
 	}
 	resource, err := factory.New(ctx, dsn)
 	if err != nil {
@@ -60,7 +59,8 @@ func Watch[Config proto.Message](ctx context.Context, dsn string, notifyFunc fun
 		func(value *structpb.Struct) {
 			conf, err := convert[Config](value)
 			if err != nil {
-				panic(err)
+				errFunc(fmt.Errorf("gonfig: convert config failed: %w", err))
+				return
 			}
 			notifyFunc(conf)
 		},

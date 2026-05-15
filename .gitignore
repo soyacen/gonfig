@@ -5,3 +5,4 @@
 resource/nacos/cache/config/nacos.env@@test@@
 dist/
 /.claude
+/.lingma
