@@ -93,6 +93,78 @@ func TestWatch(t *testing.T) {
 	}
 }
 
+func TestWatch_NilNotifyFunc(t *testing.T) {
+	resource, err := New("TEST_", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	_, err = resource.Watch(ctx, nil, func(error) {})
+	if err == nil {
+		t.Error("expected error for nil notifyFunc")
+	}
+}
+
+func TestWatch_NilErrFunc(t *testing.T) {
+	resource, err := New("TEST_", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	stop, err := resource.Watch(ctx, func(*structpb.Struct) {}, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if stop == nil {
+		t.Fatal("expected non-nil stop func")
+	}
+	_ = stop(ctx)
+}
+
+func TestWatch_CancelledContext(t *testing.T) {
+	resource, err := New("TEST_", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err = resource.Watch(ctx, func(*structpb.Struct) {}, func(error) {})
+	if err == nil {
+		t.Error("expected error for cancelled context")
+	}
+}
+
+func TestLoad_NoMatchingEnvVars(t *testing.T) {
+	resource, err := New("NONEXISTENT_PREFIX_", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = resource.Load(context.Background())
+	if err == nil {
+		t.Error("expected error when no env vars match prefix")
+	}
+}
+
+func TestLoad_EmptyPrefix(t *testing.T) {
+	resource, err := New("", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	data, err := resource.Load(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if data == nil {
+		t.Fatal("expected non-nil data")
+	}
+	// 空 prefix 应匹配所有环境变量
+	if len(data.AsMap()) == 0 {
+		t.Error("expected at least some environment variables")
+	}
+}
+
 func TestFactory_New(t *testing.T) {
 	tests := []struct {
 		name         string

@@ -6,3 +6,6 @@ resource/nacos/cache/config/nacos.env@@test@@
 dist/
 /.claude
 /.lingma
+coverage.out
+file_coverage.html
+file_coverage.out

@@ -225,3 +225,169 @@ func TestResource_New(t *testing.T) {
 		})
 	}
 }
+
+func TestWatch_NilNotifyFunc(t *testing.T) {
+	tempDir := t.TempDir()
+	testFile := filepath.Join(tempDir, "test.yaml")
+	_ = os.WriteFile(testFile, []byte("key: value"), 0o644)
+
+	resource, err := New(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	_, err = resource.Watch(ctx, nil, func(error) {})
+	if err == nil {
+		t.Error("expected error for nil notifyFunc")
+	}
+}
+
+func TestWatch_NilErrFunc(t *testing.T) {
+	tempDir := t.TempDir()
+	testFile := filepath.Join(tempDir, "test.yaml")
+	_ = os.WriteFile(testFile, []byte("key: value"), 0o644)
+
+	resource, err := New(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	stop, err := resource.Watch(ctx, func(*structpb.Struct) {}, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if stop == nil {
+		t.Fatal("expected non-nil stop func")
+	}
+	_ = stop(ctx)
+}
+
+func TestWatch_CancelledContext(t *testing.T) {
+	tempDir := t.TempDir()
+	testFile := filepath.Join(tempDir, "test.yaml")
+	_ = os.WriteFile(testFile, []byte("key: value"), 0o644)
+
+	resource, err := New(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err = resource.Watch(ctx, func(*structpb.Struct) {}, func(error) {})
+	if err == nil {
+		t.Error("expected error for cancelled context")
+	}
+}
+
+func TestLoad_FileNotFound(t *testing.T) {
+	resource, err := New("/nonexistent/path/config.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	_, err = resource.Load(ctx)
+	if err == nil {
+		t.Error("expected error when file does not exist")
+	}
+}
+
+func TestLoad_ParseError(t *testing.T) {
+	tempDir := t.TempDir()
+	testFile := filepath.Join(tempDir, "test.yaml")
+	_ = os.WriteFile(testFile, []byte("invalid: yaml: ["), 0o644)
+
+	resource, err := New(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	_, err = resource.Load(ctx)
+	if err == nil {
+		t.Error("expected error for invalid file content")
+	}
+}
+
+func TestWatch_FileContentUnchanged(t *testing.T) {
+	tempDir := t.TempDir()
+	testFile := filepath.Join(tempDir, "test.yaml")
+	content := "key: value\n"
+	_ = os.WriteFile(testFile, []byte(content), 0o644)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resource, err := New(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = resource.Load(ctx)
+
+	notifyCount := 0
+	notifyFunc := func(newValue *structpb.Struct) {
+		notifyCount++
+	}
+	errFunc := func(err error) {
+		t.Errorf("Error: %v", err)
+	}
+
+	stop, err := resource.Watch(ctx, notifyFunc, errFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stop(ctx)
+
+	// 写入相同内容，不应触发通知
+	_ = os.WriteFile(testFile, []byte(content), 0o644)
+
+	// 等待一小段时间确保事件已处理
+	time.Sleep(200 * time.Millisecond)
+
+	if notifyCount != 0 {
+		t.Errorf("expected no notifications for unchanged content, got %d", notifyCount)
+	}
+}
+
+func TestWatch_IrrelevantEvent(t *testing.T) {
+	tempDir := t.TempDir()
+	testFile := filepath.Join(tempDir, "test.yaml")
+	otherFile := filepath.Join(tempDir, "other.yaml")
+	_ = os.WriteFile(testFile, []byte("key: value\n"), 0o644)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resource, err := New(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = resource.Load(ctx)
+
+	notifyCount := 0
+	notifyFunc := func(newValue *structpb.Struct) {
+		notifyCount++
+	}
+	errFunc := func(err error) {
+		t.Errorf("Error: %v", err)
+	}
+
+	stop, err := resource.Watch(ctx, notifyFunc, errFunc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer stop(ctx)
+
+	// 创建不相关文件，不应触发通知
+	_ = os.WriteFile(otherFile, []byte("other: data\n"), 0o644)
+
+	// 等待一小段时间确保事件已处理
+	time.Sleep(200 * time.Millisecond)
+
+	if notifyCount != 0 {
+		t.Errorf("expected no notifications for irrelevant file, got %d", notifyCount)
+	}
+}
