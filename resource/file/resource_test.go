@@ -11,7 +11,6 @@ import (
 
 	_ "github.com/soyacen/gonfig/format/json"
 	_ "github.com/soyacen/gonfig/format/yaml"
-	"github.com/soyacen/gonfig/resource"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -210,9 +209,10 @@ func TestResource_New(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r, err := resource.New(context.Background(), tt.dsn)
+			f := Factory{}
+			r, err := f.New(context.Background(), tt.dsn)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("resource.New() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Factory.New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {

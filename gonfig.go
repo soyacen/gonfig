@@ -73,7 +73,7 @@ func convert[Config proto.Message](value *structpb.Struct) (Config, error) {
 	unmarshalOptions := protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}
-	if unmarshalOptions.Unmarshal(data, config) != nil {
+	if err := unmarshalOptions.Unmarshal(data, config); err != nil {
 		return config, err
 	}
 	return config, nil
