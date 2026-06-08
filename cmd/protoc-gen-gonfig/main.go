@@ -14,7 +14,7 @@ import (
 )
 
 // Version is the current version of the protoc-gen-gonfig plugin.
-var Version = "v0.0.15"
+var Version = "v0.0.16"
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
